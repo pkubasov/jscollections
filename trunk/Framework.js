@@ -87,6 +87,66 @@ function loadFramework(namespace) {
 		return hashCode;
 	};
 
+	Object.prototype.toString = function() {
+		var out=[];
+		out.push("{");
+		switch (typeof this) {
+		case "number":
+			out.push(this);
+			break;
+		case "function":
+			return this.toString();
+		case "object":
+			// when null is passed as scope, the scope is set to current window object
+			if (this === window) return "{null}";
+
+			if (this instanceof Boolean || this instanceof String) {
+				return String(this.valueOf());
+			} else if (this instanceof Number) {
+				return String(this);
+			} else if (this instanceof Array) {
+				out[0]="[";
+				for (var i=0; i< this.length; i++) {
+					try {
+						out.push(this[i] instanceof Array? ("[" + this[i].toString() + "]") : String(this[i]));
+						out.push(",");
+					} catch (e) {
+						out.push("[Array object]"); // if nesting exceeds stack size
+						out.push(",");
+					}
+				}
+				out.pop(); // get rid of last comma
+				out.push("]");
+				return out.join("");
+			} else {
+				if (this instanceof ns['Collection']) {
+					out.push(this.toString());
+				}
+				else {
+					for (p in this) {
+						try {
+							if (!this.hasOwnProperty(p) || this[p] === this || this[p] === window ) continue;
+							out.push(p + ":");
+							out.push(this[p] instanceof Array? ("[" + this[p].toString() + "]") : String(this[p]));
+							out.push(",");
+						} catch (e) {
+							out.push("[Object object]"); // if nesting exceeds stack size
+							out.push(",");
+						}
+					}
+					out.pop(",");
+				}
+			}
+			break;
+		default:
+			out.push(String(this[p]));
+			break;
+		}
+		out.push("}");
+		return out.join("");
+
+	};
+
 	/**
 	 * default equals method
 	 *
@@ -121,7 +181,7 @@ function loadFramework(namespace) {
 		 objInitialHashCode  : 11,
 		 arrInitialHashCode  : 13,
 		 funcInitialHashCode : 17,
-
+		 isIE 				 : ( function(ua) { return ua.test(navigator.userAgent.toLowerCase());} )(/msie/),
 
 		 /**
 		  *
@@ -179,7 +239,7 @@ function loadFramework(namespace) {
 				case "positivenumber":
 					return function(obj) { return !isNaN(obj) && obj >=0; };
 				case "positiveinteger":
-					return function(obj) { return !isNaN(obj) && obj >=0 && Math.floor(obj) == obj; };
+					return function(obj) { return !isNaN(obj) && obj >=0 && ~~obj == obj; };
 				case "number":
 				case "string":
 				case "function":
@@ -225,7 +285,7 @@ function loadFramework(namespace) {
 			switch (typeof obj) {
 			case "number":
 				var initial = f.myPrimeN * hashCode + obj;
-				while(Math.floor(initial)!== initial) initial*=10;
+				while(~~initial!== initial) initial*=10;
 				return initial & f.myBits;
 			case "string":
 	    		strID =  obj;
@@ -238,7 +298,8 @@ function loadFramework(namespace) {
 				break;
 			case "function":
 			case "object":
-				strID = obj instanceof Array? f.arrayHashCode(obj) :obj.hashCode();
+				if (obj === null) strID = defaultHashCode("null", hashCode);
+				else strID = obj instanceof Array? f.arrayHashCode(obj) :obj.hashCode();
 				break;
 			default:
 				strID = "null";
@@ -351,13 +412,14 @@ function loadFramework(namespace) {
 					// o is an index
 					if(o < 0 || index >= subSet.size()) throw ns['IndexOutOfBoundsException'];
 					return;
-				}
-				var compareFn = c.comparator().compare;
-				if (compareFn(o, toElement) > 0) {
-					throw ns['IllegalArgumentException'];
-				}
-				if (compareFn(o, fromElement) < 0) {
-					throw ns['IllegalArgumentException'];
+				} else if( c instanceof ns.SortedSet ) {
+					var compareFn = c.comparator().compare;
+					if (compareFn(o, toElement) > 0) {
+						throw ns['IllegalArgumentException'];
+					}
+					if (compareFn(o, fromElement) < 0) {
+						throw ns['IllegalArgumentException'];
+					}
 				}
 			}
 
@@ -372,8 +434,8 @@ function loadFramework(namespace) {
 				return c.toArray().slice(lowerBound, upperBound);
 			}
 
-			subSet.add = function (o, index) {
-				checkBounds(o);
+			subSet.add = function (o) {
+				//checkBounds(o);
 				return c.add(o);
 			}
 
@@ -402,11 +464,37 @@ function loadFramework(namespace) {
 			}
 			if(c instanceof ns.List) {
 				subSet.get = function (index) {
-					f.validateParams({index:index}, {index: {required: true, type: 'positiveInteger'} });
-					//updateBounds();
-					if(index < 0 || index >= subSet.size()) throw ns['IndexOutOfBoundsException'];
+					//f.validateParams({index:index}, {index: {required: true, type: 'positiveInteger'} });
+					//if(index < 0 || index >= subSet.size()) throw ns['IndexOutOfBoundsException'];
+					checkBounds(index);
 					return c.get(index+lowerBound);
 				}
+
+				subSet.remove = function (index) {
+					checkBounds(index);
+					c.remove(index+lowerBound);
+				};
+
+				subSet.add = function(index, o) {
+					checkBounds(index);
+					c.add(index+lowerBound, o);
+				};
+
+				subSet.addAll = function(index, o) {
+					checkBounds(index);
+					c.addAll(index+lowerBound, o);
+				};
+
+				subSet.set = function(index, o) {
+					checkBounds(index);
+					c.set(index+lowerBound, o);
+				}
+
+				subSet.removeRange = function(from, to) {
+					if(from < lowerBound || to >= upperBound) throw ns['IndexOutOfBoundsException'];
+					c.removeRange(from+lowerBound, to+lowerBound);
+				};
+
 			}
 
 			subSet.contains = function (o) {
@@ -448,7 +536,7 @@ function loadFramework(namespace) {
 			if (compareResult > 0 ) return false;
 
 			// routine case
-			var splitPoint = Math.floor(arr.length/2);
+			var splitPoint = arr.length >> 1; // divide and round down
 
 			compareResult = compareFn(arr[splitPoint], searchItem);
 			if (compareResult == 0 ) {
@@ -504,7 +592,7 @@ function loadFramework(namespace) {
 			}
 
 			// routine case
-			var splitPoint = Math.floor(arr.length/2);
+			var splitPoint = arr.length>>1; // divide and round
 
 			compareResult = compareFn(arr[splitPoint], searchItem);
 			var retVal;
