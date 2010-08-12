@@ -18,14 +18,14 @@
     Date: July 23, 2010
 
 */
-function loadCollectionInterfaces(ns) {
+function loadCollectionInterfaces(namespace) {
 
 	// load common
-	loadFramework(ns);
+	loadFramework(namespace);
 
 	//shortcuts
+	var ns = namespace;
 	var f = ns['framework'];
-
 
 	/**
 	 *

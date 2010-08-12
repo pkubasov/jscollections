@@ -29,19 +29,24 @@ function loadCollectionImplementations(namespace) {
 
 
 	/**
-	 *   TreeSet - an implementation of a sorted set
+	 * TreeSet - an implementation of a sorted set
+	 *
+	 *
 	 */
 	var TreeSet = function () {
 
-		// private static variables
+		/**
+				private static variables
+		*/
 		var calledInit = false;
 
-		/**
-		 *  Inner static tree set iterator object
-		 *
-		 */
 		var TreeSetIterator = function () {
 
+			/**
+			 * TreeSetIterator constructor
+			 * @param {Object} params Parent object that this iterator will iterate over
+			 *
+			 */
 			var myConstructor = function (params) {
 
 				params = params || {};
@@ -54,10 +59,21 @@ function loadCollectionImplementations(namespace) {
 					if (!isNaN(i)) indexes.push(i);
 				}
 
+				/**
+				 * Returns true if the iteration has more elements.
+				 * (In other words, returns true if next would return an element rather than throwing an exception.)
+				 * @return true if the iteration has more elements, otherwise false
+				 *
+				 */
 				this.hasNext = function () {
 					return indexes[_currPos+1]!==undefined;
 				};
 
+				/**
+				 * Returns the next element in the iteration.
+				 * @return next element in the iteration
+				 * @throws NoSuchElementException iteration has no more elements
+				 */
 				this.next = function () {
 					var o = _arr[indexes[++_currPos]];
 					_flip = true;
@@ -67,6 +83,11 @@ function loadCollectionImplementations(namespace) {
 					return o;
 				};
 
+				/**
+				 * Removes from the underlying collection the last element returned by the iterator.
+				 * @throws IllegalStateException if the next method has not yet been called,
+				 * or the remove method has already been called after the last call to the next method.
+				 */
 				this.remove = function () {
 					 if (_currPos == -1 | !_flip) throw ns['IllegalStateException'];
 					 _flip = false;
@@ -75,27 +96,34 @@ function loadCollectionImplementations(namespace) {
 			};
 			return myConstructor;
 		}();
+
 		// make a type of Iterator
 		f.implement(TreeSetIterator, ns['Iterator']);
 
 
 		/**
-		 * @params params The following overloaded constructors are available:
+		 * TreeSet constructor
+		 * The following overloaded constructors are available:
 		 * 	1) null params - default -->  new TreeSet()
 		 *	2) comparator			 -->  new TreeSet( comparator ) - sets comparator to passed in value
 		 *	    and/or #3
 		 *	3) collection			 -->  new TreeSet( collection )
 		 *		or #4 ( in which case the comparator argument is ignored, at it uses the comparator from the passed in sortedSet
 		 *	4) sortedSet			 -->  new TreeSet( sortedSet  )
+		 *
+		 * @params params Parameter object containing optional comparator/collection objects used to initialize TreeSet
 		 */
 		var myConstructor = function (params) {
 
 			var that = this || {};
 			params = params || {};
+
 			// apply instance methods and import protected scope
 			var _protected = ns['AbstractSet'].call(that, params);
 
-			// private variables
+			/**
+					private variables
+			 */
 			var _UID = Math.genUID();
 			var _arrayCopy = [];
 			var _comparator;
@@ -103,11 +131,9 @@ function loadCollectionImplementations(namespace) {
 			var _ST = 100; // sort index threshold for merge sorts
 			var _SLT = 0.5; // sort load threshold - lower
 			var _SLTU = 0.90 // sort load threshold - upper
-
 			var _lastSortedIndex = 0;  // used to partition sorted part of the array from non-sorted
 
 			if(params.collection && params.sortedSet) throw ns['IllegalArgumentException'];
-
 			if(params.collection) {
 				_protected.arr = params.collection.toArray();
 			}
@@ -125,7 +151,6 @@ function loadCollectionImplementations(namespace) {
 				_lastSortedIndex=_protected.arr.length-1;
 				_comparator = params.sortedSet.comparator();
 			}
-
 			if	(_protected.arr.length) {
 				updateSortAndHash();
 				_arrayCopy = _protected.arr.concat([]);
@@ -135,12 +160,18 @@ function loadCollectionImplementations(namespace) {
 
 
 			/**
-			 *		public API that needs to directly access private variables
-			 *      (thus cannot be combined with use of prototype chain or "this", since either of the two
-			 *		can be publicly accessible
-			 *
+			 		Public API that needs to directly access private variables
+			        (thus cannot be combined with use of prototype chain or "this",
+			 		since either of the two can be publicly accessible
 			 */
 
+			/**
+			 * Returns an array containing all of the elements in this collection.
+			 * This array is not connected to the underlying collection, so the caller is free
+			 * to modify it.
+			 * @return an array containing all of the elements in this collection
+			 *
+			 */
 			this.toArray = function () {
 				if (!_protected.dirty && _protected.arr.length == _arrayCopy.length) return _arrayCopy;
 				updateSortAndHash();
@@ -149,6 +180,14 @@ function loadCollectionImplementations(namespace) {
 				return _arrayCopy;
 			};
 
+			/**
+			 * Adds the specified element to this set if it is not already present.
+			 * @param {Object} o element to be added to this set
+			 * @returns true if this set did not already contain the specified element
+			 * @throws ClassCastException - if the specified object cannot be compared with the elements currently in this set
+			 * @throws NullPointerException  if the specified element is null and this set uses natural ordering, or its comparator does not permit null elements
+			 *
+			 */
 			this.add = function (o) {
 				if (_protected.objTypeChecker && !_protected.objTypeChecker(o)) {
 					throw ns['ClassCastException'];
@@ -167,6 +206,10 @@ function loadCollectionImplementations(namespace) {
 				return false;
 			};
 
+			/**
+			 *
+			 *
+			 */
 			this.comparator = function () { return _comparator; };
 
 			this.size = function () {
@@ -255,6 +298,22 @@ function loadCollectionImplementations(namespace) {
 
 
 		function init() {
+
+			TreeSet.prototype.toString = function() {
+							var out = [];
+
+							var i = this.iterator();
+							while (i.hasNext()) {
+								var o = i.next();
+								out.push(Object.prototype.toString.call(o));
+							}
+							return "[" + out.join(",") + "]";
+
+			};
+
+			TreeSet.prototype.clone = function() {
+				return new TreeSet({collection: this});
+			}
 
 			TreeSet.prototype.iterator = function () {
 				var _iterator = new TreeSetIterator({parent: this});
@@ -439,8 +498,8 @@ function loadCollectionImplementations(namespace) {
 				if(index===undefined) {
 					index = _protected.size-1;
 				}
-				_protected.addToHashMap(o, index);
-				_protected.updateHashMap(index+1, 1);
+				//_protected.addToHashMap(o, index);
+				//_protected.updateHashMap(index+1, 1);
 				return true;
 
 			};
@@ -460,10 +519,11 @@ function loadCollectionImplementations(namespace) {
 						type: "positiveInteger"
 					}
 				});
+				if (index >= that.size()) throw ns['IndexOutOfBoundsException'];
 
 				var originalElement = _protected.arr[index];
-				_protected.removeFromHashMap(originalElement, index);
-				_protected.addToHashMap(o, index);
+				//_protected.removeFromHashMap(originalElement, index);
+				//_protected.addToHashMap(o, index);
 				_protected.arr[index] = o;
 				return originalElement;
 			};
@@ -486,23 +546,29 @@ function loadCollectionImplementations(namespace) {
 			 */
 			this.remove = function (o, isIndex) {
 
-				if(!isIndex) f.validateParams({element: o}, {element: {required: true, type: "any"} });
+				if (!isIndex) f.validateParams({element: o}, {element: {required: true, type: "any"} });
 				else f.validateParams({element: o}, {element: {required: true, type: "positiveInteger"} });
 
 
-				if(!isIndex) index = _protected.hashMap[f.defaultHashCode(o)];
-				else index = o;
+				if (isIndex) index = o;
+				else {
+					var hashCode = f.defaultHashCode(o);
+					for (var i=0; i< _protected.arr.length; i++) {
+						if (f.defaultHashCode(_protected.arr[i]) == hashCode) {
+							index = i;
+							break;
+						}
+					}
+				}
 
 				if (index === undefined) return index;
-				if (index instanceof Array) {
-					index = index.shift();
-				} else {
-					_protected.removeFromHashMap(o, index);
-				}
+
 				var removed =  _protected.arr.splice(index,1);
-				_protected.updateHashMap(index, -1);
+
+				//_protected.updateHashMap(index, -1);
 				_protected.size--;
-				return removed;
+				if (isIndex) return removed[0];
+				else return true;
 			};
 
 			calledInit || init();
@@ -513,6 +579,23 @@ function loadCollectionImplementations(namespace) {
 		myConstructor.getType = function () { return  "ArrayList"; };
 
 		function init() {
+
+			ArrayList.prototype.toString = function() {
+							var out = [];
+
+							var i = this.iterator();
+							while (i.hasNext()) {
+								var o = i.next();
+								out.push(Object.prototype.toString.call(o));
+							}
+							return "[" + out.join(",") + "]";
+
+			};
+
+			ArrayList.prototype.clone = function() {
+				return new ArrayList({collection: this});
+			}
+
 			calledInit = true;
 		}
 

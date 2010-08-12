@@ -18,12 +18,14 @@
     Date: July 23, 2010
 
 */
-function loadCollectionAbstractClasses (ns) {
+function loadCollectionAbstractClasses (namespace) {
 
-	loadCollectionInterfaces(ns);
+	loadCollectionInterfaces(namespace);
 
 	//shortcuts
+	var ns = namespace;
 	var f = ns['framework'];
+
 
 	// access matrix - used to implement "protected" scope
 	// keys are names of objects and GUIDs of subclasses that are allowed access
@@ -190,6 +192,10 @@ function loadCollectionAbstractClasses (ns) {
 		// define more methods here using prototype-based inheritance
 		function init() {
 
+			var MANY_ITEMS = 1000;
+			var NUM_ITERATIONS_PER_TIMEOUT = 100;
+			var TIMEOUT = 3; //milliseconds
+
 			AbstractCollection.prototype.addAll = function (c) {
 				 if (!c || !c.size || !c.toArray) throw ns['IllegalArgumentException'];
 
@@ -211,7 +217,8 @@ function loadCollectionAbstractClasses (ns) {
 			};
 
 			AbstractCollection.prototype.retainAll = function (c) {
-				if (!c || !c.iterator) throw ns['IllegalArgumentException'];
+				f.validateParams({collection:c}, { collection: { required: true, type: "ct.Collection"} });
+
 				if (c.isEmpty()) {
 					this.clear();
 					return true;
@@ -219,11 +226,19 @@ function loadCollectionAbstractClasses (ns) {
 
 				var iterator = this.iterator();
 				var success = false;
-				while (iterator.hasNext()) {
+				var useTimeout = c.size() * this.size() > MANY_ITEMS;
+				var i=0;
+
+				var fn = function(){
+					i++;
 					if (!c.contains(iterator.next())) {
 						success = iterator.remove();
 					}
-				}
+					//if (useTimeout && iterator.hasNext() && !i%NUM_ITERATIONS_PER_TIMEOUT) setTimeout(arguments.callee,  TIMEOUT);
+				};
+
+				while (iterator.hasNext()) fn();
+
 				return success;
 			};
 
@@ -241,21 +256,27 @@ function loadCollectionAbstractClasses (ns) {
 				return true;
 			};
 
-			AbstractCollection.prototype.removeAll = function (c) {
-				try {
-					var success = false;
-					var iterator = c.iterator();
+			AbstractCollection.prototype.removeAll = function (c, cb) {
+				f.validateParams({collection:c, callback: cb}, { collection: { required: true, type: "ct.Collection"},callback: {required: false, type: "function"} });
 
-					while (iterator.hasNext()) {
+				var success = false;
+				var iterator = c.iterator();
+				var useTimeout = c.size() * this.size() > MANY_ITEMS;
+				var i=0;
+				var that = this;
+
+				while (iterator.hasNext()) {
+					var fn = function() {
+						i++;
 						var o = iterator.next();
-						success = this.remove(o);
-					}
-					//if (success) updateHashMap();
-					return success;
-				} catch (e) {
-					if (!c instanceof ns['Collection']) throw ns['IllegalArgumentException'];
-					else throw e;
+						success = that.remove(o);
+						if (f.isIE && useTimeout && iterator.hasNext()) setTimeout(arguments.callee,  TIMEOUT);
+						else if(f.isIE && cb && !iterator.hasNext()) cb();
+					};
+					fn();
+					if(f.isIE && useTimeout) break;  // IE locks up on large iterations, so we execute this in a non blocking fashion, with a callback
 				}
+				return success;
 			};
 
 			calledInit = true;
@@ -339,49 +360,69 @@ function loadCollectionAbstractClasses (ns) {
 				var _arr = params.parent.toArray();
 				var _currPos = params.index? params.index-1 : -1;
 				var _flip = false;
+				var _lastCall;
 
-				var indexes =[];
-				for (var i in _arr) {
-					if (!isNaN(i)) indexes.push(i);
+				//var indices;
+				//generateIndices();
+				/*
+				function generateIndices() {
+					indices =[];
+					for (var i in _arr) {
+						if (!isNaN(i)) indices.push(i);
+					}
 				}
+				*/
 
 				this.hasNext = function () {
-					return indexes[_currPos+1]!==undefined;
+					return _arr[_currPos+1]!==undefined;
 				};
 
 				this.next = function () {
-					var o = _arr[indexes[++_currPos]];
+					var o = _arr[++_currPos];
 					_flip = true;
 					if (o === undefined) {
 						throw ns['NoSuchElementException'];
 					}
+					_lastCall = "next";
 					return o;
 				};
 
 				this.remove = function () {
 					if (_currPos == -1 || !_flip) throw ns['IllegalStateException'];
 					_flip = false;
-					return params.parent.remove(_arr[indexes[_currPos]]);
+					var index;
+					if (_lastCall == "next") index = _currPos;
+					else index = _currPos+1;
+					var removed = _arr.splice(index, 1);
+					_currPos--;
+					//indices.splice(index, 1);
+					return params.parent.remove(removed[0]);
 				};
 
 				this.previous = function () {
-					if (_currPos<=0) throw ns['NoSuchElementException'];
+					if (_currPos < 0) throw ns['NoSuchElementException'];
 					_flip = true;
-					var o = _arr[indexes[--_currPos]];
+					var o = _arr[_currPos--];
 					if (o === undefined) {
 						throw ns['NoSuchElementException'];
 					}
+					_lastCall = "previous";
 					return o;
 				};
 
 
 				this.add = function (o) {
-					params.parent.add({element: o, index: _currPos<=0 ? 0: _currPos-1});
-					_flip = false;
+					var success = params.parent.add( _currPos<=0 ? 0: _currPos+1, o);
+					if(success) {
+						_arr.splice(_currPos+1, 0, o);
+						//indices.splice(_currPos+1, 0, o);
+						_flip = false;
+						_currPos++;
+					}
 				};
 
 				this.hasPrevious = function () {
-					return _arr[indexes[_currPos-1]]!==undefined;
+					return _arr[_currPos]!==undefined;
 				};
 
 				this.nextIndex = function () {
@@ -391,13 +432,16 @@ function loadCollectionAbstractClasses (ns) {
 
 				this.previousIndex = function () {
 					if (_currPos<=0) return -1;
-					else return _currPos-1;
+					else return _currPos;
 				};
 
 				this.set = function(o) {
 					if (!_flip) throw ns['IllegalStateException'];
 					var index = _currPos<=0 ? 0 : _currPos;
-					params.parent.add({element:o, index: index});
+					if (_lastCall == "next") index = _currPos;
+					else index = _currPos+1;
+					_arr[index] = o;
+					params.parent.set(index, o);
 				};
 
 			};
@@ -422,75 +466,8 @@ function loadCollectionAbstractClasses (ns) {
 			// private variables
 			var _UID = Math.genUID();
 
-			//private functions
-			function addToHashMap (o, index) {
-				var hashCode = f.defaultHashCode(o);
-				var j = _protected.hashMap[hashCode];
-				if(!j) {
-					_protected.hashMap[hashCode] = index;
-				} else if (j instanceof Array) {
-					// insert so that the array stays sorted
-					var found = false;
-					for (var i=0; i< j.length; i++) {
-						if (j[i] < index) {
-							j.splice(i,0, index);
-							found=true;
-							break;
-						}
-					}
-					if (!found) j.push(index);
-				} else {
-					_protected.hashMap[hashCode] = [j, index];
-				}
-			}
 
-			function removeFromHashMap (o, index) {
-				f.validateParams({index:index, element: o}, {
-					index: {
-						required: false,
-						type: "positiveInteger"
-					},
-					element: {
-						required: true,
-						type: "any"
-					}
-				});
-				var hashCode = f.defaultHashCode(o);
-
-				var j = _protected.hashMap[hashCode];
-				if (!j) return;
-				else if (j instanceof Array && index) {
-					for (var i=0; i< j.length; i++) {
-						if (j[i] == index) {
-							j.splice(i,1);
-							break;
-						}
-					}
-				} else {
-					delete _protected.hashMap[hashCode];
-				}
-			}
-
-			function updateHashMap (index, offset) {
-				var hashMap = _protected.hashMap;
-
-				for (var i in hashMap) {
-					if(isNaN(i)) continue;
-					var j = hashMap[i];
-					if (j instanceof Array) {
-						for (var z=0; z < j.length; z++) {
-							if (j[z] > index) j[z] += offset;
-						}
-					} else {
-						if (j > index) hashMap[i] = j + offset;
-					}
-				}
-			}
-
-			// export private function to protected object
-			_protected.updateHashMap = updateHashMap;
-			_protected.removeFromHashMap = removeFromHashMap;
-			_protected.addToHashMap = addToHashMap;
+			// public API
 
 			this.toArray = function () {
 				return [].concat([], _protected.arr);
@@ -498,18 +475,20 @@ function loadCollectionAbstractClasses (ns) {
 
 			this.indexOf = function (o) {
 				f.validateParams({object:o}, {object: { required: true, type: "any"} });
-				var index = _protected.hashMap[f.defaultHashCode(o)];
-				if (!index) return -1;
-				else if(index instanceof Array) return index[0];
-				else return index;
+				var hashCode = f.defaultHashCode(o);
+				for (var i=0; i< _protected.arr.length; i++) {
+					if (f.defaultHashCode(_protected.arr[i]) == hashCode) return i;
+				}
+				return -1;
 			};
 
 			this.lastIndexOf = function (o) {
 				f.validateParams({object:o}, {object: { required: true, type: "any"} });
-				var index = _protected.hashMap[f.defaultHashCode(o)];
-				if (!index) return -1;
-				else if(index instanceof Array) return index[index.length-1];
-				else return index;
+				var hashCode = f.defaultHashCode(o);
+				for (var i=_protected.arr.length-1; i >=0; i--) {
+					if (f.defaultHashCode(_protected.arr[i]) == hashCode) return i;
+				}
+				return -1;
 			};
 
 			this.set = function () {
@@ -524,6 +503,10 @@ function loadCollectionAbstractClasses (ns) {
 				throw ns['UnsupportedOperationException'];
 			};
 
+			this.contains = function (o) {
+				return this.indexOf(o) != -1;
+			};
+
 
 			calledInit || init();
 
@@ -535,7 +518,11 @@ function loadCollectionAbstractClasses (ns) {
 
 		function init() {
 
-			AbstractList.prototype.listIterator = function(index) {
+			var MANY_ITEMS = 1000;
+			var NUM_ITERATIONS_PER_TIMEOUT = 100;
+			var TIMEOUT = 5 ; //milliseconds
+
+			AbstractList.prototype.listIterator = function (index) {
 				f.validateParams({index: index}, { index: { required: false, type: "positiveInteger"} });
 				if (index!==undefined && (index < 0 || index >= this.size() || this.isEmpty())) throw ns['IndexOutOfBoundsException'];
 				return new ListIterator({parent:this, index: index});
@@ -567,6 +554,39 @@ function loadCollectionAbstractClasses (ns) {
 				return success;
 			};
 
+			AbstractList.prototype.retainAll = function (c, cb) {
+				f.validateParams({collection:c}, { collection: { required: true, type: "ct.Collection" }});
+
+				compareFn = f.defaultCompare;
+				var sortedArray  = c.toArray().sort(compareFn);
+				var changed = false;
+
+				var _arr = this.toArray();
+				var bSearch = f.binarySearch;
+				var useTimeout = c.size() * this.size() > MANY_ITEMS;
+				var counter=0;
+				var that = this;
+				var i=0;
+
+				var fn = function (start) {
+					if (!bSearch(sortedArray, _arr[i], compareFn)) {
+						if (that.remove(i, true)!==undefined) {
+							i--;
+							changed = true;
+						}
+					}
+					if (f.isIE && useTimeout && i< _arr.length) return setTimeout(function(){fn(++i)},  TIMEOUT);
+					if (f.isIE && cb) cb();
+				};
+
+				for (; i< _arr.length; i++) {
+					fn(i);
+					if(f.isIE && useTimeout) break;
+				}
+
+				return changed;
+			};
+
 			AbstractList.prototype.removeRange = function (from, to) {
 				f.validateParams({fromElement: from, toElement: to}, {
 					fromElement: {
@@ -579,10 +599,11 @@ function loadCollectionAbstractClasses (ns) {
 					}
 				});
 
-				if(from == to) return;
+				if(from >= to ) return;
 
 				var i = this.listIterator(from);
-				while (i.hasNext() && i.nextIndex() < to) {
+				var j= 0;
+				while (i.hasNext() && j++ < to - from) {
 					i.next() && i.remove();
 				}
 
