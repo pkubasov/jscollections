@@ -35,3 +35,5 @@ Supported OO features
    * Private static methods, variables
    * Private instance methods and variables
    * Protected instance methods and variables
+
+More info here - http://sites.google.com/site/extremejavascript/documentation
