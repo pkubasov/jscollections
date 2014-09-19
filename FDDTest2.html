@@ -23,1735 +23,1754 @@
 
 -->
 <head>
-<script language="JavaScript" type="text/javascript" src="../../jsunit/app/jsUnitCore.js"></script>
+<!-- <script language="JavaScript" type="text/javascript" src="../../jsunit/app/jsUnitCore.js"></script> -->
 <script language="JavaScript" type="text/javascript" src="Framework.js"></script>
 <script language="JavaScript" type="text/javascript" src="CollectionInterfaces.js"></script>
 <script language="JavaScript" type="text/javascript" src="CollectionAbstractClasses.js"></script>
 <script language="JavaScript" type="text/javascript" src="CollectionImplementations.js"></script>
 <script>
-	//run once per test
-
-	ct={}; // top-level ns
-
-	function setUpPage () {
-		setUpPageStatus = 'complete';
-		loadCollectionImplementations("ct");
-	}
-
-	// run before each test
-	function setUp () {
-
-	}
-
-	function testFramework() {
-		helperTestBinarySearch()
-		helperTestSortAndMerge();
-		helperTestBinarySearchNearestNeighbor();
-	}
-
-	function testObjectConstruction() {
-		var failed = false;
-		var c = new ct.Collection() ;
-
-		try {
-			c.removeAll();
-		} catch(e) {
-			assertTrue(e === ct.UnimplementedMethodError);
-			failed = true;
-		}
-		assertTrue(failed);
-
-		var s = new ct.Set();
-		assertEquals("Method not properly inherited", "function", typeof s.removeAll);
-		assertTrue(s instanceof ct.Set);
-		assertTrue(s instanceof ct.Collection);
-
-		var a = new ct.AbstractCollection();
-		var failed = false;
-		try {
-			a.add(1);
-		} catch(e) {
-			failed = true;
-		}
-		assertFalse(failed);
-		assertEquals(1, a.toArray()[0]);
-
-		var as = new ct.AbstractSet();
-		assertTrue(s instanceof ct.Set);
-		var failed = false;
-		try {
-			as.add(1);
-		} catch(e) {
-			failed = true;
-		}
-		assertFalse(failed);
-		assertEquals(1, as.toArray()[0]);
-
-		var ts = new ct.TreeSet();
-		ts.add(34);
-		ts.add(23);
-		ts.add(2);
-		ts.add(100);
-		assertEquals(2,ts.toArray()[0]);
-		assertEquals(100, ts.last());
-
-		assertTrue(ts instanceof ct.Set);
-		assertTrue(ts instanceof ct.SortedSet);
-		assertTrue(ts instanceof ct.NavigableSet);
-
-	}
-
-
-	function testTreeSet() {
-
-		// sorted set-specific
-		helperTestSortedSetAdd(ct.TreeSet);
-		helperTestSortedSetAddAll(ct.TreeSet);
-		helperTestSortedSetFirst(ct.TreeSet);
-		helperTestSortedSetLast(ct.TreeSet);
-		helperTestSortedSetCeiling(ct.TreeSet);
-		helperTestSortedSetDescendingIterator(ct.TreeSet);
-		helperTestSortedSetDescendingSet(ct.TreeSet);
-		helperTestSortedSetFloor(ct.TreeSet);
-		helperTestSortedSetHigher(ct.TreeSet);
-		helperTestSortedSetLower(ct.TreeSet);
-		helperTestSortedSetPollFirst(ct.TreeSet);
-		helperTestSortedSetPollLast(ct.TreeSet);
-
-		// TreeSet-specific
-		helperTestSetAdd(ct.TreeSet);
-		helperTestSortedSetEquals(ct.TreeSet);
-		helperTestHeadSet(ct.TreeSet);
-		helperTestTailSet(ct.TreeSet);
-		helperTestSubSet(ct.TreeSet);
-		helperTestTreeSetConstructors();
-
-		// generic
-		helperTestSortedSetClear(ct.TreeSet);
-		helperTestContains(ct.TreeSet);
-		helperTestContainsAll(ct.TreeSet);
-		helperTestIsEmpty(ct.TreeSet);
-		helperTestIteratorHasNext(ct.TreeSet);
-		helperTestIteratorNext(ct.TreeSet);
-		helperTestIteratorRemove(ct.TreeSet);
-		helperTestRemove(ct.TreeSet);
-		helperTestRemoveAll(ct.TreeSet);
-		helperTestRetainAll(ct.TreeSet);
-		helperTestSize(ct.TreeSet);
-		helperTestToArray(ct.TreeSet);
-
-		//performance
-		//helperStressTestSortedSet(ct.TreeSet);
-		//helperTestOrderOfGrowth(ct.TreeSet);
-
-	}
-
-	function testArrayList() {
-
-		// generic
-		helperTestAddAll(ct.ArrayList);
-		helperTestAdd(ct.ArrayList);
-		helperTestClear(ct.ArrayList);
-		helperTestContains(ct.ArrayList);
-		helperTestContainsAll(ct.ArrayList);
-		helperTestIsEmpty(ct.ArrayList);
-		helperTestIteratorHasNext(ct.ArrayList);
-		helperTestIteratorNext(ct.ArrayList);
-		helperTestIteratorRemove(ct.ArrayList);
-		helperTestRemove(ct.ArrayList);
-		helperTestRemoveAll(ct.ArrayList);
-		helperTestRetainAll(ct.ArrayList);
-		helperTestSize(ct.ArrayList);
-		helperTestToArray(ct.ArrayList);
-
-		// List-specific
-		helperTestListAdd(ct.ArrayList);
-		helperTestListAddAll(ct.ArrayList);
-		helperTestListGet(ct.ArrayList);
-		helperTestListIndexOf(ct.ArrayList);
-		helperTestListLastIndexOf(ct.ArrayList);
-		helperTestListRemoveRange(ct.ArrayList);
-		helperTestListSubList(ct.ArrayList);
-		helperTestListSet(ct.ArrayList);
-
-		//List Iterator
-		helperTestListIterator(ct.ArrayList);
-		helperTestListIteratorNext(ct.ArrayList);
-		helperTestListIteratorNextIndex(ct.ArrayList);
-		helperTestListIteratorPrevious(ct.ArrayList);
-		helperTestListIteratorPreviousIndex(ct.ArrayList);
-		helperTestListIteratorRemove(ct.ArrayList);
-		helperTestListIteratorAdd(ct.ArrayList);
-		helperTestListIteratorSet(ct.ArrayList);
-		helperTestListIteratorHasNext(ct.ArrayList);
-		helperTestListIteratorHasPrevious(ct.ArrayList);
-
-		//performance
-		//helperStressTestList(ct.ArrayList);
-		//helperTestOrderOfGrowth(ct.ArrayList);
-
-
-	}
-
-
-	function testGenerics() {
-
-		var c = new ct.TreeSet({objType: "number"});
-		c.add(1);
-		var failed = false;
-		try {
-			c.add([1, 2, 3]);
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Should not allow adding arrays to Collection of numbers", failed);
-
-		failed = false;
-		try {
-			c = new ct.TreeSet({objType: "strangeObject"});
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue(failed);
-
-		c = new ct.TreeSet({objType: "Array" });
-		c.add([1,2,3,5]);
-		c.add([]);
-		c.add([87,2]);
-		assertEquals(3, c.size());
-
-		c=new ct.TreeSet({objType: "ct.TreeSet" });
-		var c1=new ct.TreeSet();
-		c.add(c1);
-		assertEquals(1, c.size());
-	}
-
-
-	// helper
-	function instantiate(objType) {
-		var type = objType.getType();
-		return eval("new ct." + type + "()");
-	}
-
-
-	/**
-	 *			API Tests for Collection Interface
-	 *
-	 */
-	function helperTestAdd(objType) {
-		var c = instantiate(objType);
-		assertTrue(c.add(100));
-		assertTrue(c.add(30));
-		assertEquals("Size wrong", 2, c.size());
-
-		var i = c.iterator();
-		var j=[];
-		while(i.hasNext()) {
-			j[j.length] = i.next();
-		}
-		assertEquals("Wrong value at position 0", 100, j[0]);
-		assertEquals("Wrong value at position 1", 30, j[1]);
-	}
-
-	function helperTestAddAll(objType) {
-		var c = instantiate(objType);
-		// try passing in array - should fail
-		var failed = false;
-		var j =[1,2,3];
-		try {
-			c.addAll(j);
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Passing array to addAll should have failed", failed);
-
-		var c2 = instantiate(objType);
-
-		c2.add(23);
-		c2.add(24);
-		c2.add(25);
-
-		c.add(1);
-		c.add(2);
-		assertTrue(c.addAll(c2));
-
-		var i = c.iterator();
-		var j=[];
-		while(i.hasNext()) {
-			j[j.length] = i.next();
-		}
-		assertEquals("Wrong value at position 1", 1, j[0]);
-		assertEquals("Wrong value at position 3", 23, j[2]);
-		assertEquals("Wrong value at position 5", 25, j[4]);
-		assertEquals("Wrong size", 5, c.size());
-	}
-
-	function helperTestClear(objType) {
-		var c = instantiate(objType);
-		c.add(1);
-		c.add([1,2,3]);
-		c.add(function() {});
-		c.add({});
-		c.clear();
-
-		assertEquals("Size should be 0", 0, c.size());
-		assertEquals("Should be empty", [].join(), c.toArray().join());
-	}
-
-	function helperTestSortedSetClear(objType) {
-		var c = instantiate(objType);
-		c.add([1,2]);
-		c.add([1,2,3]);
-		c.clear();
-
-		assertEquals("Size should be 0", 0, c.size());
-		assertEquals("Should be empty", [].join(), c.toArray().join());
-	}
-
-	function helperTestContains(objType) {
-		var c = instantiate(objType);
-		c.add([1]);
-		c.add([1,2,3]);
-
-		assertTrue(c.contains([1]));
-		assertFalse(c.contains([2,3]));
-		assertTrue(c.contains([1,2,3]));
-
-	}
-
-	function helperTestContainsAll(objType) {
-		var c = instantiate(objType);
-		c.add([1]);
-		c.add([1,2,3]);
-		c.add([1,5]);
-		c.add([9,8,6]);
-
-		var c2 = instantiate(objType);
-		c2.add([1,5]);
-		c2.add([1,2,3]);
-
-		assertTrue(c.containsAll(c2));
-
-		c2.add([4]);
-		assertFalse(c.containsAll(c2));
-	}
-
-	function helperTestSortedSetEquals(objType) {
-		var c = instantiate(objType);
-		c.add([1, {a:1,b:2}]);
-		c.add([1,2,3]);
-		c.add([5]);
-
-		// same values in different order
-		var c2 = instantiate(objType);
-		c2.add([1,2,3]);
-		c2.add([5]);
-		c2.add([1, {a:1,b:2}]);
-
-		assertTrue(c.equals(c2));
-
-		var c3= instantiate(objType);
-		c3.add([1, {a:1,b:2}]);
-		c3.add([1,2,3]);
-		c3.add([5]);
-
-		assertTrue(c.equals(c3));
-
-		// now add with a different comparator
-		var comp = new ct.Comparator();
-		comp.compare = function(a, b) { return a.length - b.length; }
-
-		var c4 = new ct.TreeSet({objType: "Array", comparator:  comp });
-		c4.add([1, {a:1,b:2}]);
-		c4.add([1,2,3]);
-		c4.add([5]);
-
-		assertFalse(c.equals(c4));
-
-
-	}
-
-	function helperTestHashCode(objType) {
-
-		// let's make sure that 2 identical objects get the same hash
-		var c1 = instantiate(objType);
-		c1.add(1);
-		c1.add([1.2, 3.4, 23]);
-		c1.add({a:1,b:2,c:{d:1}});
-		var lambda = function(a,b,c) { return a+b+c;};
-		c1.add(lambda);
-
-		// same collection in different order - should be the same hashCode, since order is not guaranteed
-		var c2 = instantiate(objType);
-		c2.add({a:1,b:2,c:{d:1}});
-		c2.add(1);
-		c2.add([1.2, 3.4, 23]);
-		c2.add(lambda);
-		var h1 = c1.hashCode();
-		var h2 = c2.hashCode();
-		assertEquals("Two hashCodes should be the  same", h1, h2);
-
-		// now change one param (3.5 instead of 3.4) and see if they are different
-		var c3 = instantiate(objType);
-		c3.add(1);
-		c3.add([1.2, 3.5, 23]);
-		c3.add({a:1,b:2,c:{d:1}});
-		c3.add(lambda);
-
-		assertFalse("Two hashCodes should not be the  same", h1 == c3.hashCode());
-
-		// change obj param
-		var c4 = instantiate(objType);
-		c4.add(1);
-		c4.add([1.2, 3.4, 23]);
-		c4.add({a:1,b:2,c:{d:{z:[1,2,3]}}});
-		c4.add(lambda);
-
-		assertFalse("Two hashCodes should not be the  same", h1 == c4.hashCode());
-
-	}
-
-	function helperTestIsEmpty(objType) {
-		var c1 = instantiate(objType);
-		assertTrue(c1.isEmpty());
-
-		c1.add({});
-		assertFalse(c1.isEmpty());
-
-		c1.clear();
-		assertTrue(c1.isEmpty());
-	}
-
-	function helperTestIteratorHasNext(objType) {
-		var c = instantiate(objType);
-		assertFalse(c.iterator().hasNext());
-
-		c.add(3);
-		assertTrue(c.iterator().hasNext());
-
-		c.remove(3);
-		assertFalse(c.iterator().hasNext());
-
-		c.add([1.2, 3.4, 23]);
-		c.add({a:1,b:2,c:{d:1}});
-		assertTrue(c.iterator().hasNext());
-
-		c.clear();
-		assertFalse(c.iterator().hasNext());
-
-		c.add(2);
-		c.add(3);
-		c.add(4);
-		var i=c.iterator();
-		i.next();
-		i.next();
-		assertTrue(i.hasNext());
-		i.next();
-		assertFalse(i.hasNext());
-
-		var c3 = instantiate(objType);
-		c3.add(2);
-		c3.add(4);
-		c3.add(3);
-
-		c.removeAll(c3);
-		assertFalse(c.iterator().hasNext());
-
-	}
-
-	function helperTestIteratorNext(objType) {
-		var c = instantiate(objType);
-		var failed = false;
-		try {
-			c.itertor().next();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Should have failed", failed);
-
-		c.add(1);
-		c.add(2);
-
-		var i=c.iterator();
-
-		assertEquals(1, i.next());
-		assertEquals(2, i.next());
-		failed = false;
-		try {
-			i.next();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Should have failed after reaching end", failed);
-
-	}
-
-	function helperTestIteratorRemove(objType) {
-		var c = instantiate(objType);
-		var failed = false;
-		try {
-			c.iterator().remove();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Should have failed - next() was not called", failed);
-
-		c.add(1);
-		c.add(2);
-		c.add(3);
-
-		failed = false;
-		try {
-			c.iterator().remove();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Should have failed - next() was not called, only add()", failed);
-
-		var i=c.iterator();
-
-		i.next();
-		i.remove();
-
-		assertEquals(2, c.toArray()[0]);
-
-		failed = false;
-		try {
-			i.remove();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Should have failed - one call to remove() allowed per call to next()", failed);
-
-
-
-	}
-
-	function helperTestRemove(objType) {
-		var c1 = instantiate(objType);
-		c1.add({});
-		c1.remove({});
-		assertTrue(c1.isEmpty());
-	}
-
-	function helperTestRemoveAll(objType) {
-
-		var c1 = instantiate(objType);
-
-		var c2 = instantiate(objType);
-
-		c1.add({a:1,b:2,c:3});
-		c1.add({a:[]});
-		c1.add({a:34});
-		c1.add({b:true});
-		c1.add({c:"cool"});
-
-		c2.add({a:1,b:2,c:3});
-		c2.add({b:true});
-
-		c1.removeAll(c2);
-
-		i=c1.iterator();
-		while(i.hasNext()) {
-			var j = i.next();
-			assertFalse(j.b == 2);
-			assertFalse(j.b === true);
-		}
-
-	}
-
-	function helperTestRetainAll(objType) {
-		var c1 = instantiate(objType);
-
-		var c2 = instantiate(objType);
-
-		c1.add({a:1,b:2,c:3});
-		c1.add({a:[]});
-		c1.add({a:34});
-		c1.add({b:true});
-		c1.add({c:"cool"});
-
-		c2.add({a:1,b:2,c:3});
-		c2.add({a:34});
-
-		c1.retainAll(c2);
-
-		i=c1.iterator();
-		while(i.hasNext()) {
-			var j = i.next();
-			assertFalse(j.a === []);
-			assertFalse(j.c === "cool");
-			assertFalse(j.b === true);
-		}
-	}
-
-	function helperTestSize(objType) {
-		var c1 = instantiate(objType);
-
-		assertEquals("Size should be 0", 0, c1.size());
-
-		c1.add(3);
-		c1.add(4);
-
-		assertEquals("Size should be 2", 2, c1.size());
-
-		c1.add(54);
-		c1.add(48);
-
-		c1.remove(3);
-
-		assertEquals("Size should be 3", 3, c1.size());
-
-		c1.add(56);
-		c1.add(4211);
-
-		var c2 = instantiate(objType);
-
-		c2.add(56);
-		c2.add(4);
-
-		c1.removeAll(c2);
-
-		assertEquals("Size should be 3", 3, c1.size());
-
-		c2.remove(4);
-		c2.add(2947);
-
-		c1.addAll(c2);
-
-		assertEquals("Size should be 5", 5, c1.size());
-
-	}
-
-	function helperTestToArray(objType) {
-
-		var c1 = instantiate(objType);
-		var j=[];
-		assertEquals(j.length, c1.toArray().length);
-
-		c1.add(45);
-		c1.add(566);
-
-		assertEquals(45, c1.toArray()[0]);
-		assertEquals(566, c1.toArray()[1]);
-	}
-
-	function helperTestSetAdd(objType) {
-		var s = instantiate(objType);
-
-		var result1 = s.add(1);
-		var result2 = s.add(1);
-
-		assertTrue(result1);
-		assertFalse(result2);
-
-		var s1 = instantiate(objType);
-		j= function(a, bc, d) { return 1; };
-
-		var result3 = s1.add(j);
-		var result4 = s1.add(j);
-
-		assertTrue(result3);
-		assertFalse(result4);
-	}
-
-	function helperTestSortedSetAdd(objType) {
-		var s = instantiate(objType);
-
-		s.add(5);
-		s.add(1);
-		s.add(34);
-		s.add(0);
-		s.add(-1);
-
-		assertEquals(-1, s.toArray()[0]);
-		assertEquals(0, s.toArray()[1]);
-
-
-	}
-
-	function helperTestSortedSetAddAll(objType) {
-		var s = instantiate(objType);
-
-		var c = instantiate(ct.TreeSet);
-		c.add(100);
-		c.add(99);
-		c.add(193);
-
-		s.addAll(c);
-
-		assertEquals(99, s.iterator().next());
-	}
-
-
-	function helperTestSortedSetFirst(objType) {
-		var s = instantiate(objType);
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-
-		assertEquals(-45, s.first());
-	}
-
-	function helperTestSortedSetLast(objType) {
-		var s = instantiate(objType);
-
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
+  //run once per test
+
+  ct={}; // top-level ns
+
+  function setUpPage () {
+    setUpPageStatus = 'complete';
+    loadCollectionImplementations("ct");
+  }
+
+  // run before each test
+  function setUp () {
+
+  }
+
+  // js unit replacement funcs
+  function debug(str, val) {
+    str = val? str.replace('timeTaken', val): str;
+  	console.log(str);
+  }
+
+  function assertTrue(val) {
+     return val? true : false;
+  }
+
+  function assertFalse(val) {
+     return !assertTrue(val);
+  }
+
+  function assertEquals(a,b) {
+     return a==b;
+  }
+
+
+  function testFramework() {
+    helperTestBinarySearch()
+    helperTestSortAndMerge();
+    helperTestBinarySearchNearestNeighbor();
+  }
+
+  function testObjectConstruction() {
+    var failed = false;
+    var c = new ct.Collection() ;
+
+    try {
+      c.removeAll();
+    } catch(e) {
+      assertTrue(e === ct.UnimplementedMethodError);
+      failed = true;
+    }
+    assertTrue(failed);
+
+    var s = new ct.Set();
+    assertEquals("Method not properly inherited", "function", typeof s.removeAll);
+    assertTrue(s instanceof ct.Set);
+    assertTrue(s instanceof ct.Collection);
+
+    var a = new ct.AbstractCollection();
+    var failed = false;
+    try {
+      a.add(1);
+    } catch(e) {
+      failed = true;
+    }
+    assertFalse(failed);
+    assertEquals(1, a.toArray()[0]);
+
+    var as = new ct.AbstractSet();
+    assertTrue(s instanceof ct.Set);
+    var failed = false;
+    try {
+      as.add(1);
+    } catch(e) {
+      failed = true;
+    }
+    assertFalse(failed);
+    assertEquals(1, as.toArray()[0]);
+
+    var ts = new ct.TreeSet();
+    ts.add(34);
+    ts.add(23);
+    ts.add(2);
+    ts.add(100);
+    assertEquals(2,ts.toArray()[0]);
+    assertEquals(100, ts.last());
+
+    assertTrue(ts instanceof ct.Set);
+    assertTrue(ts instanceof ct.SortedSet);
+    assertTrue(ts instanceof ct.NavigableSet);
+
+  }
+
+
+  function testTreeSet() {
+
+    // sorted set-specific
+    helperTestSortedSetAdd(ct.TreeSet);
+    helperTestSortedSetAddAll(ct.TreeSet);
+    helperTestSortedSetFirst(ct.TreeSet);
+    helperTestSortedSetLast(ct.TreeSet);
+    helperTestSortedSetCeiling(ct.TreeSet);
+    helperTestSortedSetDescendingIterator(ct.TreeSet);
+    helperTestSortedSetDescendingSet(ct.TreeSet);
+    helperTestSortedSetFloor(ct.TreeSet);
+    helperTestSortedSetHigher(ct.TreeSet);
+    helperTestSortedSetLower(ct.TreeSet);
+    helperTestSortedSetPollFirst(ct.TreeSet);
+    helperTestSortedSetPollLast(ct.TreeSet);
+
+    // TreeSet-specific
+    helperTestSetAdd(ct.TreeSet);
+    helperTestSortedSetEquals(ct.TreeSet);
+    helperTestHeadSet(ct.TreeSet);
+    helperTestTailSet(ct.TreeSet);
+    helperTestSubSet(ct.TreeSet);
+    helperTestTreeSetConstructors();
+
+    // generic
+    helperTestSortedSetClear(ct.TreeSet);
+    helperTestContains(ct.TreeSet);
+    helperTestContainsAll(ct.TreeSet);
+    helperTestIsEmpty(ct.TreeSet);
+    helperTestIteratorHasNext(ct.TreeSet);
+    helperTestIteratorNext(ct.TreeSet);
+    helperTestIteratorRemove(ct.TreeSet);
+    helperTestRemove(ct.TreeSet);
+    helperTestRemoveAll(ct.TreeSet);
+    helperTestRetainAll(ct.TreeSet);
+    helperTestSize(ct.TreeSet);
+    helperTestToArray(ct.TreeSet);
+
+    //performance
+    //helperStressTestSortedSet(ct.TreeSet);
+    //helperTestOrderOfGrowth(ct.TreeSet);
+
+  }
+
+  function testArrayList() {
+
+    // generic
+    helperTestAddAll(ct.ArrayList);
+    helperTestAdd(ct.ArrayList);
+    helperTestClear(ct.ArrayList);
+    helperTestContains(ct.ArrayList);
+    helperTestContainsAll(ct.ArrayList);
+    helperTestIsEmpty(ct.ArrayList);
+    helperTestIteratorHasNext(ct.ArrayList);
+    helperTestIteratorNext(ct.ArrayList);
+    helperTestIteratorRemove(ct.ArrayList);
+    helperTestRemove(ct.ArrayList);
+    helperTestRemoveAll(ct.ArrayList);
+    helperTestRetainAll(ct.ArrayList);
+    helperTestSize(ct.ArrayList);
+    helperTestToArray(ct.ArrayList);
+
+    // List-specific
+    helperTestListAdd(ct.ArrayList);
+    helperTestListAddAll(ct.ArrayList);
+    helperTestListGet(ct.ArrayList);
+    helperTestListIndexOf(ct.ArrayList);
+    helperTestListLastIndexOf(ct.ArrayList);
+    helperTestListRemoveRange(ct.ArrayList);
+    helperTestListSubList(ct.ArrayList);
+    helperTestListSet(ct.ArrayList);
+
+    //List Iterator
+    helperTestListIterator(ct.ArrayList);
+    helperTestListIteratorNext(ct.ArrayList);
+    helperTestListIteratorNextIndex(ct.ArrayList);
+    helperTestListIteratorPrevious(ct.ArrayList);
+    helperTestListIteratorPreviousIndex(ct.ArrayList);
+    helperTestListIteratorRemove(ct.ArrayList);
+    helperTestListIteratorAdd(ct.ArrayList);
+    helperTestListIteratorSet(ct.ArrayList);
+    helperTestListIteratorHasNext(ct.ArrayList);
+    helperTestListIteratorHasPrevious(ct.ArrayList);
+
+    //performance
+    //helperStressTestList(ct.ArrayList);
+    //helperTestOrderOfGrowth(ct.ArrayList);
+
+
+  }
+
+
+  function testGenerics() {
+
+    var c = new ct.TreeSet({objType: "number"});
+    c.add(1);
+    var failed = false;
+    try {
+      c.add([1, 2, 3]);
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Should not allow adding arrays to Collection of numbers", failed);
+
+    failed = false;
+    try {
+      c = new ct.TreeSet({objType: "strangeObject"});
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue(failed);
+
+    c = new ct.TreeSet({objType: "Array" });
+    c.add([1,2,3,5]);
+    c.add([]);
+    c.add([87,2]);
+    assertEquals(3, c.size());
+
+    c=new ct.TreeSet({objType: "ct.TreeSet" });
+    var c1=new ct.TreeSet();
+    c.add(c1);
+    assertEquals(1, c.size());
+  }
+
+
+  // helper
+  function instantiate(objType) {
+    var type = objType.getType();
+    return eval("new ct." + type + "()");
+  }
+
+
+  /**
+   *      API Tests for Collection Interface
+   *
+   */
+  function helperTestAdd(objType) {
+    var c = instantiate(objType);
+    assertTrue(c.add(100));
+    assertTrue(c.add(30));
+    assertEquals("Size wrong", 2, c.size());
+
+    var i = c.iterator();
+    var j=[];
+    while(i.hasNext()) {
+      j[j.length] = i.next();
+    }
+    assertEquals("Wrong value at position 0", 100, j[0]);
+    assertEquals("Wrong value at position 1", 30, j[1]);
+  }
+
+  function helperTestAddAll(objType) {
+    var c = instantiate(objType);
+    // try passing in array - should fail
+    var failed = false;
+    var j =[1,2,3];
+    try {
+      c.addAll(j);
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Passing array to addAll should have failed", failed);
+
+    var c2 = instantiate(objType);
+
+    c2.add(23);
+    c2.add(24);
+    c2.add(25);
+
+    c.add(1);
+    c.add(2);
+    assertTrue(c.addAll(c2));
+
+    var i = c.iterator();
+    var j=[];
+    while(i.hasNext()) {
+      j[j.length] = i.next();
+    }
+    assertEquals("Wrong value at position 1", 1, j[0]);
+    assertEquals("Wrong value at position 3", 23, j[2]);
+    assertEquals("Wrong value at position 5", 25, j[4]);
+    assertEquals("Wrong size", 5, c.size());
+  }
+
+  function helperTestClear(objType) {
+    var c = instantiate(objType);
+    c.add(1);
+    c.add([1,2,3]);
+    c.add(function() {});
+    c.add({});
+    c.clear();
+
+    assertEquals("Size should be 0", 0, c.size());
+    assertEquals("Should be empty", [].join(), c.toArray().join());
+  }
+
+  function helperTestSortedSetClear(objType) {
+    var c = instantiate(objType);
+    c.add([1,2]);
+    c.add([1,2,3]);
+    c.clear();
+
+    assertEquals("Size should be 0", 0, c.size());
+    assertEquals("Should be empty", [].join(), c.toArray().join());
+  }
+
+  function helperTestContains(objType) {
+    var c = instantiate(objType);
+    c.add([1]);
+    c.add([1,2,3]);
+
+    assertTrue(c.contains([1]));
+    assertFalse(c.contains([2,3]));
+    assertTrue(c.contains([1,2,3]));
+
+  }
+
+  function helperTestContainsAll(objType) {
+    var c = instantiate(objType);
+    c.add([1]);
+    c.add([1,2,3]);
+    c.add([1,5]);
+    c.add([9,8,6]);
+
+    var c2 = instantiate(objType);
+    c2.add([1,5]);
+    c2.add([1,2,3]);
+
+    assertTrue(c.containsAll(c2));
+
+    c2.add([4]);
+    assertFalse(c.containsAll(c2));
+  }
+
+  function helperTestSortedSetEquals(objType) {
+    var c = instantiate(objType);
+    c.add([1, {a:1,b:2}]);
+    c.add([1,2,3]);
+    c.add([5]);
+
+    // same values in different order
+    var c2 = instantiate(objType);
+    c2.add([1,2,3]);
+    c2.add([5]);
+    c2.add([1, {a:1,b:2}]);
+
+    assertTrue(c.equals(c2));
+
+    var c3= instantiate(objType);
+    c3.add([1, {a:1,b:2}]);
+    c3.add([1,2,3]);
+    c3.add([5]);
+
+    assertTrue(c.equals(c3));
+
+    // now add with a different comparator
+    var comp = new ct.Comparator();
+    comp.compare = function(a, b) { return a.length - b.length; }
+
+    var c4 = new ct.TreeSet({objType: "Array", comparator:  comp });
+    c4.add([1, {a:1,b:2}]);
+    c4.add([1,2,3]);
+    c4.add([5]);
+
+    assertFalse(c.equals(c4));
+
+
+  }
+
+  function helperTestHashCode(objType) {
+
+    // let's make sure that 2 identical objects get the same hash
+    var c1 = instantiate(objType);
+    c1.add(1);
+    c1.add([1.2, 3.4, 23]);
+    c1.add({a:1,b:2,c:{d:1}});
+    var lambda = function(a,b,c) { return a+b+c;};
+    c1.add(lambda);
+
+    // same collection in different order - should be the same hashCode, since order is not guaranteed
+    var c2 = instantiate(objType);
+    c2.add({a:1,b:2,c:{d:1}});
+    c2.add(1);
+    c2.add([1.2, 3.4, 23]);
+    c2.add(lambda);
+    var h1 = c1.hashCode();
+    var h2 = c2.hashCode();
+    assertEquals("Two hashCodes should be the  same", h1, h2);
+
+    // now change one param (3.5 instead of 3.4) and see if they are different
+    var c3 = instantiate(objType);
+    c3.add(1);
+    c3.add([1.2, 3.5, 23]);
+    c3.add({a:1,b:2,c:{d:1}});
+    c3.add(lambda);
+
+    assertFalse("Two hashCodes should not be the  same", h1 == c3.hashCode());
+
+    // change obj param
+    var c4 = instantiate(objType);
+    c4.add(1);
+    c4.add([1.2, 3.4, 23]);
+    c4.add({a:1,b:2,c:{d:{z:[1,2,3]}}});
+    c4.add(lambda);
+
+    assertFalse("Two hashCodes should not be the  same", h1 == c4.hashCode());
+
+  }
+
+  function helperTestIsEmpty(objType) {
+    var c1 = instantiate(objType);
+    assertTrue(c1.isEmpty());
+
+    c1.add({});
+    assertFalse(c1.isEmpty());
+
+    c1.clear();
+    assertTrue(c1.isEmpty());
+  }
+
+  function helperTestIteratorHasNext(objType) {
+    var c = instantiate(objType);
+    assertFalse(c.iterator().hasNext());
+
+    c.add(3);
+    assertTrue(c.iterator().hasNext());
+
+    c.remove(3);
+    assertFalse(c.iterator().hasNext());
+
+    c.add([1.2, 3.4, 23]);
+    c.add({a:1,b:2,c:{d:1}});
+    assertTrue(c.iterator().hasNext());
+
+    c.clear();
+    assertFalse(c.iterator().hasNext());
+
+    c.add(2);
+    c.add(3);
+    c.add(4);
+    var i=c.iterator();
+    i.next();
+    i.next();
+    assertTrue(i.hasNext());
+    i.next();
+    assertFalse(i.hasNext());
+
+    var c3 = instantiate(objType);
+    c3.add(2);
+    c3.add(4);
+    c3.add(3);
+
+    c.removeAll(c3);
+    assertFalse(c.iterator().hasNext());
+
+  }
+
+  function helperTestIteratorNext(objType) {
+    var c = instantiate(objType);
+    var failed = false;
+    try {
+      c.itertor().next();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Should have failed", failed);
+
+    c.add(1);
+    c.add(2);
+
+    var i=c.iterator();
+
+    assertEquals(1, i.next());
+    assertEquals(2, i.next());
+    failed = false;
+    try {
+      i.next();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Should have failed after reaching end", failed);
+
+  }
+
+  function helperTestIteratorRemove(objType) {
+    var c = instantiate(objType);
+    var failed = false;
+    try {
+      c.iterator().remove();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Should have failed - next() was not called", failed);
+
+    c.add(1);
+    c.add(2);
+    c.add(3);
+
+    failed = false;
+    try {
+      c.iterator().remove();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Should have failed - next() was not called, only add()", failed);
+
+    var i=c.iterator();
+
+    i.next();
+    i.remove();
+
+    assertEquals(2, c.toArray()[0]);
+
+    failed = false;
+    try {
+      i.remove();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Should have failed - one call to remove() allowed per call to next()", failed);
+
+
+
+  }
+
+  function helperTestRemove(objType) {
+    var c1 = instantiate(objType);
+    c1.add({});
+    c1.remove({});
+    assertTrue(c1.isEmpty());
+  }
+
+  function helperTestRemoveAll(objType) {
+
+    var c1 = instantiate(objType);
+
+    var c2 = instantiate(objType);
+
+    c1.add({a:1,b:2,c:3});
+    c1.add({a:[]});
+    c1.add({a:34});
+    c1.add({b:true});
+    c1.add({c:"cool"});
+
+    c2.add({a:1,b:2,c:3});
+    c2.add({b:true});
+
+    c1.removeAll(c2);
+
+    i=c1.iterator();
+    while(i.hasNext()) {
+      var j = i.next();
+      assertFalse(j.b == 2);
+      assertFalse(j.b === true);
+    }
+
+  }
+
+  function helperTestRetainAll(objType) {
+    var c1 = instantiate(objType);
+
+    var c2 = instantiate(objType);
+
+    c1.add({a:1,b:2,c:3});
+    c1.add({a:[]});
+    c1.add({a:34});
+    c1.add({b:true});
+    c1.add({c:"cool"});
+
+    c2.add({a:1,b:2,c:3});
+    c2.add({a:34});
+
+    c1.retainAll(c2);
+
+    i=c1.iterator();
+    while(i.hasNext()) {
+      var j = i.next();
+      assertFalse(j.a === []);
+      assertFalse(j.c === "cool");
+      assertFalse(j.b === true);
+    }
+  }
+
+  function helperTestSize(objType) {
+    var c1 = instantiate(objType);
+
+    assertEquals("Size should be 0", 0, c1.size());
+
+    c1.add(3);
+    c1.add(4);
+
+    assertEquals("Size should be 2", 2, c1.size());
+
+    c1.add(54);
+    c1.add(48);
+
+    c1.remove(3);
+
+    assertEquals("Size should be 3", 3, c1.size());
+
+    c1.add(56);
+    c1.add(4211);
+
+    var c2 = instantiate(objType);
+
+    c2.add(56);
+    c2.add(4);
+
+    c1.removeAll(c2);
+
+    assertEquals("Size should be 3", 3, c1.size());
+
+    c2.remove(4);
+    c2.add(2947);
+
+    c1.addAll(c2);
+
+    assertEquals("Size should be 5", 5, c1.size());
+
+  }
+
+  function helperTestToArray(objType) {
+
+    var c1 = instantiate(objType);
+    var j=[];
+    assertEquals(j.length, c1.toArray().length);
+
+    c1.add(45);
+    c1.add(566);
+
+    assertEquals(45, c1.toArray()[0]);
+    assertEquals(566, c1.toArray()[1]);
+  }
+
+  function helperTestSetAdd(objType) {
+    var s = instantiate(objType);
+
+    var result1 = s.add(1);
+    var result2 = s.add(1);
+
+    assertTrue(result1);
+    assertFalse(result2);
+
+    var s1 = instantiate(objType);
+    j= function(a, bc, d) { return 1; };
+
+    var result3 = s1.add(j);
+    var result4 = s1.add(j);
+
+    assertTrue(result3);
+    assertFalse(result4);
+  }
+
+  function helperTestSortedSetAdd(objType) {
+    var s = instantiate(objType);
+
+    s.add(5);
+    s.add(1);
+    s.add(34);
+    s.add(0);
+    s.add(-1);
+
+    assertEquals(-1, s.toArray()[0]);
+    assertEquals(0, s.toArray()[1]);
+
+
+  }
+
+  function helperTestSortedSetAddAll(objType) {
+    var s = instantiate(objType);
+
+    var c = instantiate(ct.TreeSet);
+    c.add(100);
+    c.add(99);
+    c.add(193);
+
+    s.addAll(c);
+
+    assertEquals(99, s.iterator().next());
+  }
+
+
+  function helperTestSortedSetFirst(objType) {
+    var s = instantiate(objType);
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+
+    assertEquals(-45, s.first());
+  }
+
+  function helperTestSortedSetLast(objType) {
+    var s = instantiate(objType);
+
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+
+    assertEquals(100, s.last());
+  }
+
+  function helperTestHeadSet (objType) {
+    var s = instantiate(objType);
+
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(25);
+    s.add(28);
+    s.add(99);
+    s.add(56);
+    s.add(45);
+    s.add(-3);
+    s.add(10);
+    s.add(14);
+
+    var s2 = s.headSet(24);
+    var s3 = s.headSet(27);
+    var s4 = s.headSet(11);
+
+
+    assertEquals(s2.size(), 7);
+
+    assertEquals(s3.size(), 8);
+    assertEquals(s3.toArray()[0], -45);
+    assertEquals(s3.toArray()[7], 25);
+
+
+    assertEquals(s4.size(), 5);
+
+    // test that the set is backed properly by original
+
+    s4.remove(-45);
+
+    assertEquals(s4.size(), 4);
+    assertEquals(s.size(), 12);
+
+    s3.add(-45);
+
+    assertEquals(s4.size(), 5);
+    assertEquals(s.size(), 13);
+
 
-		assertEquals(100, s.last());
-	}
-
-	function helperTestHeadSet (objType) {
-		var s = instantiate(objType);
-
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(25);
-		s.add(28);
-		s.add(99);
-		s.add(56);
-		s.add(45);
-		s.add(-3);
-		s.add(10);
-		s.add(14);
-
-		var s2 = s.headSet(24);
-		var s3 = s.headSet(27);
-		var s4 = s.headSet(11);
-
-
-		assertEquals(s2.size(), 7);
-
-		assertEquals(s3.size(), 8);
-		assertEquals(s3.toArray()[0], -45);
-		assertEquals(s3.toArray()[7], 25);
-
-
-		assertEquals(s4.size(), 5);
-
-		// test that the set is backed properly by original
+  };
 
-		s4.remove(-45);
+  function helperTestTailSet (objType) {
+    var s = instantiate(objType);
 
-		assertEquals(s4.size(), 4);
-		assertEquals(s.size(), 12);
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
+    s.add(99);
+    s.add(56);
+    s.add(45);
+    s.add(-3);
+    s.add(10);
+    s.add(14);
+
+    var s2 = s.tailSet(15);
+    var s3 = s.tailSet(25);
+    var s4 = s.tailSet(22);
+
+    assertEquals(s2.size(), 6);
+    assertEquals(s2.toArray()[0], 23);
+    assertEquals(s2.toArray()[5], 100);
+
+    assertEquals(s3.size(), 4);
+    assertEquals(s3.toArray()[0], 45);
+    assertEquals(s3.toArray()[3], 100);
+
+    assertEquals(s4.toArray()[0], 23);
+    assertEquals(s4.size(), 6);
+
+    // test backing set
+
+    s4.remove(23);
+
+    assertFalse(s.contains(23));
+    assertFalse(s3.contains(23));
+
+    assertEquals(s2.size(), 5);
+
+    s4.add(23);
+
+    assertEquals(s2.size(), 6);
+
+
+  };
+
+  function helperTestSubSet (objType) {
+    var s = instantiate(objType);
+
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
+    s.add(99);
+    s.add(56);
+    s.add(45);
+    s.add(-3);
+    s.add(10);
+    s.add(14);
+
+    var s2 = s.subSet(5, 15);
+    var s3 = s.subSet(-3, 25);
+    var s4 = s.subSet(2, 56);
+
+
+
+    assertEquals(s2.size(), 2);
+    assertEquals(s2.toArray()[0], 10);
+    assertEquals(s2.toArray()[1], 14);
+
+    assertEquals(s3.size(), 7);
+    assertEquals(s3.toArray()[0], -3);
+    assertEquals(s3.toArray()[6], 24);
+
+    assertEquals(s4.toArray()[0], 4);
+    assertEquals(s4.size(), 7);
+    assertEquals(56, s4.toArray()[6]);
+
+    // test backing set
+
+    s4.remove(23);
+
+    assertFalse(s.contains(23));
+    assertFalse(s3.contains(23));
+
+    assertEquals(s3.size(), 6);
+
+    s4.add(23);
+
+    assertEquals(s3.size(), 7);
+
+  };
 
-		s3.add(-45);
+
+  function helperTestSortedSetCeiling(objType){
+    var s = instantiate(objType);
+
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
+    s.add(99);
+    s.add(56);
+    s.add(45);
+    s.add(-3);
+    s.add(10);
+    s.add(14);
+
+    assertEquals(99, s.ceiling(95));
+    assertEquals(56, s.ceiling(56));
+    assertTrue(s.ceiling(123)===undefined);
+
+  }
+
+  function helperTestSortedSetDescendingIterator(objType){
+    var s = instantiate(objType);
+
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
+    s.add(99);
+    s.add(56);
+    s.add(45);
+    s.add(-3);
+    s.add(10);
+    s.add(14);
 
-		assertEquals(s4.size(), 5);
-		assertEquals(s.size(), 13);
+    var i = s.descendingIterator();
+    assertTrue(i.hasNext());
 
+    assertEquals(100,i.next());
+    assertEquals(99,i.next());
+    assertTrue(i.remove());
 
-	};
+    assertFalse(s.contains(99));
 
-	function helperTestTailSet (objType) {
-		var s = instantiate(objType);
+  }
 
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
-		s.add(99);
-		s.add(56);
-		s.add(45);
-		s.add(-3);
-		s.add(10);
-		s.add(14);
+  function helperTestSortedSetDescendingSet(objType){
 
-		var s2 = s.tailSet(15);
-		var s3 = s.tailSet(25);
-		var s4 = s.tailSet(22);
+    var s = instantiate(objType);
 
-		assertEquals(s2.size(), 6);
-		assertEquals(s2.toArray()[0], 23);
-		assertEquals(s2.toArray()[5], 100);
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
+    s.add(99);
+    s.add(56);
+    s.add(45);
+    s.add(-3);
+    s.add(10);
+    s.add(14);
 
-		assertEquals(s3.size(), 4);
-		assertEquals(s3.toArray()[0], 45);
-		assertEquals(s3.toArray()[3], 100);
+    var ds = s.descendingSet();
 
-		assertEquals(s4.toArray()[0], 23);
-		assertEquals(s4.size(), 6);
+    assertEquals(100, ds.first());
+    assertEquals(-45, ds.last());
+    assertEquals(56, ds.toArray()[2]);
 
-		// test backing set
-
-		s4.remove(23);
-
-		assertFalse(s.contains(23));
-		assertFalse(s3.contains(23));
-
-		assertEquals(s2.size(), 5);
-
-		s4.add(23);
-
-		assertEquals(s2.size(), 6);
-
 
-	};
+  }
 
-	function helperTestSubSet (objType) {
-		var s = instantiate(objType);
+  function helperTestSortedSetFloor(objType){
 
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
-		s.add(99);
-		s.add(56);
-		s.add(45);
-		s.add(-3);
-		s.add(10);
-		s.add(14);
-
-		var s2 = s.subSet(5, 15);
-		var s3 = s.subSet(-3, 25);
-		var s4 = s.subSet(2, 56);
+    var s = instantiate(objType);
 
-
-
-		assertEquals(s2.size(), 2);
-		assertEquals(s2.toArray()[0], 10);
-		assertEquals(s2.toArray()[1], 14);
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
 
-		assertEquals(s3.size(), 7);
-		assertEquals(s3.toArray()[0], -3);
-		assertEquals(s3.toArray()[6], 24);
+    assertEquals(23, s.floor(23));
+    assertEquals(24, s.floor(25));
+    assertEquals(-45, s.floor(-13));
+    assertTrue(s.floor(-99) === undefined);
 
-		assertEquals(s4.toArray()[0], 4);
-		assertEquals(s4.size(), 7);
-		assertEquals(56, s4.toArray()[6]);
+  }
 
-		// test backing set
+  function helperTestSortedSetHigher(objType){
 
-		s4.remove(23);
+    var s = instantiate(objType);
 
-		assertFalse(s.contains(23));
-		assertFalse(s3.contains(23));
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
 
-		assertEquals(s3.size(), 6);
+    assertEquals(23, s.higher(12));
+    assertEquals(1, s.higher(-45));
+    assertEquals(100, s.higher(99));
+    assertTrue(s.higher(100) === undefined);
 
-		s4.add(23);
+  }
 
-		assertEquals(s3.size(), 7);
+  function helperTestSortedSetLower(objType){
+    var s = instantiate(objType);
 
-	};
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
+    s.add(23);
+    s.add(24);
 
+    assertEquals(4, s.lower(22));
+    assertEquals(100, s.lower(103));
 
-	function helperTestSortedSetCeiling(objType){
-		var s = instantiate(objType);
+    assertTrue(s.lower(-45) === undefined);
+    assertEquals(-45, s.lower(-41));
 
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
-		s.add(99);
-		s.add(56);
-		s.add(45);
-		s.add(-3);
-		s.add(10);
-		s.add(14);
+  }
 
-		assertEquals(99, s.ceiling(95));
-		assertEquals(56, s.ceiling(56));
-		assertTrue(s.ceiling(123)===undefined);
+  function helperTestSortedSetPollFirst(objType){
 
-	}
+    var s = instantiate(objType);
 
-	function helperTestSortedSetDescendingIterator(objType){
-		var s = instantiate(objType);
+    assertTrue(s.pollFirst() === null);
 
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
-		s.add(99);
-		s.add(56);
-		s.add(45);
-		s.add(-3);
-		s.add(10);
-		s.add(14);
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
 
-		var i = s.descendingIterator();
-		assertTrue(i.hasNext());
+    assertEquals(-45, s.pollFirst());
 
-		assertEquals(100,i.next());
-		assertEquals(99,i.next());
-		assertTrue(i.remove());
+  }
 
-		assertFalse(s.contains(99));
+  function helperTestSortedSetPollLast(objType){
+    var s = instantiate(objType);
 
-	}
+    assertTrue(s.pollLast() === null);
 
-	function helperTestSortedSetDescendingSet(objType){
+    s.add(100);
+    s.add(1);
+    s.add(-45);
+    s.add(4);
 
-		var s = instantiate(objType);
+    assertEquals(100, s.pollLast());
+  }
 
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
-		s.add(99);
-		s.add(56);
-		s.add(45);
-		s.add(-3);
-		s.add(10);
-		s.add(14);
+  function helperTestTreeSetConstructors() {
 
-		var ds = s.descendingSet();
+    var c = new ct.AbstractCollection();
+    c.add("aaabb");
+    c.add("cccdd");
+    c.add("aabbcc");
+    c.add("d");
 
-		assertEquals(100, ds.first());
-		assertEquals(-45, ds.last());
-		assertEquals(56, ds.toArray()[2]);
+    var comp = new ct.Comparator();
+    comp.compare = function(a, b) { return Number(a.toAscii()) - Number(b.toAscii()); };
 
+    var s = new ct.TreeSet({collection: c, comparator: comp });
 
-	}
+    assertEquals("d", s.toArray()[0]);
 
-	function helperTestSortedSetFloor(objType){
 
-		var s = instantiate(objType);
+    var s2 = new ct.TreeSet({sortedSet: s});
+    s2.add("c");
+    s2.add("z");
 
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
+    assertEquals(6, s2.size());
+    assertEquals("z", s2.toArray()[2]);
+    assertEquals("d", s2.toArray()[1]);
+    assertEquals("cccdd", s2.last());
 
-		assertEquals(23, s.floor(23));
-		assertEquals(24, s.floor(25));
-		assertEquals(-45, s.floor(-13));
-		assertTrue(s.floor(-99) === undefined);
 
-	}
-
-	function helperTestSortedSetHigher(objType){
-
-		var s = instantiate(objType);
-
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
-
-		assertEquals(23, s.higher(12));
-		assertEquals(1, s.higher(-45));
-		assertEquals(100, s.higher(99));
-		assertTrue(s.higher(100) === undefined);
-
-	}
-
-	function helperTestSortedSetLower(objType){
-		var s = instantiate(objType);
-
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-		s.add(23);
-		s.add(24);
-
-		assertEquals(4, s.lower(22));
-		assertEquals(100, s.lower(103));
-
-		assertTrue(s.lower(-45) === undefined);
-		assertEquals(-45, s.lower(-41));
-
-	}
-
-	function helperTestSortedSetPollFirst(objType){
-
-		var s = instantiate(objType);
-
-		assertTrue(s.pollFirst() === null);
-
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-
-		assertEquals(-45, s.pollFirst());
-
-	}
-
-	function helperTestSortedSetPollLast(objType){
-		var s = instantiate(objType);
-
-		assertTrue(s.pollLast() === null);
-
-		s.add(100);
-		s.add(1);
-		s.add(-45);
-		s.add(4);
-
-		assertEquals(100, s.pollLast());
-	}
-
-	function helperTestTreeSetConstructors() {
-
-		var c = new ct.AbstractCollection();
-		c.add("aaabb");
-		c.add("cccdd");
-		c.add("aabbcc");
-		c.add("d");
-
-		var comp = new ct.Comparator();
-		comp.compare = function(a, b) { return Number(a.toAscii()) - Number(b.toAscii()); };
-
-		var s = new ct.TreeSet({collection: c, comparator: comp });
-
-		assertEquals("d", s.toArray()[0]);
-
-
-		var s2 = new ct.TreeSet({sortedSet: s});
-		s2.add("c");
-		s2.add("z");
-
-		assertEquals(6, s2.size());
-		assertEquals("z", s2.toArray()[2]);
-		assertEquals("d", s2.toArray()[1]);
-		assertEquals("cccdd", s2.last());
-
-
-	}
-
-	function helperTestListAdd(objType) {
-		// simple add
-		var s = instantiate(objType);
-
-		s.add(2);
-		s.add(4);
-		s.add(2);
-		s.add(-10);
-
-		assertEquals(4, s.size());
-		assertEquals(2, s.get(0));
-		assertEquals(-10, s.get(3));
-
-		// add at specified index
-		var failed = false;
-		try {
-			s.add(4, 100);
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue("Should have failed", failed);
-
-		s.add(2, 17);
-		assertEquals(17, s.get(2));
-		assertEquals(2, s.get(3));
-
-	};
-
-	function helperTestListAddAll(objType) {
-
-		var s = instantiate(objType);
-
-		s.add(2);
-		s.add(4);
-		s.add(2);
-		s.add(-10);
-
-		var j = instantiate(objType);
-		j.add(100);
-		j.add(10);
-		j.addAll(s);
-
-		assertEquals(6, j.size());
-		assertEquals(100, j.get(0));
-		assertEquals(2, j.get(2));
-
-		j.addAll(1, s);
-		assertEquals(2, j.get(1));
-		assertEquals(10, j.get(5));
-
-	};
-
-	function helperTestListGet(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(1);
-		assertEquals(12, s.get(0));
-
-		var failed = false;
-		try {
-			s.get(2);
-		} catch (e) {
-			failed = true;
-		}
-		assertTrue(failed);
-
-		failed = false;
-		try {
-			s.get(-1);
-		} catch (e) {
-			failed = true;
-		}
-		assertTrue(failed);
-	};
-
-	function helperTestListIndexOf(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(13);
-		s.add(5);
-		assertEquals(1, s.indexOf(5));
-		assertEquals(-1, s.indexOf(11));
-	};
-
-	function helperTestListLastIndexOf(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(13);
-		s.add(5);
-		assertEquals(3, s.lastIndexOf(5));
-		assertEquals(-1, s.lastIndexOf(11));
-	};
-
-	function helperTestListRemoveRange(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(13);
-		s.add(5);
-		s.add(27);
-		s.add(-12);
-		s.add(22);
-
-		s.removeRange(2,5);
-		assertEquals(4, s.size());
-		assertEquals(12, s.get(0));
-		assertEquals(5, s.get(1));
-		assertEquals(-12, s.get(2));
-		assertEquals(22,s.get(3));
-	};
-
-	function helperTestListSubList(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(13);
-		s.add(5);
-		s.add(27);
-		s.add(-12);
-		s.add(22);
-
-		var s1 = s.subList(2,5);
-		assertEquals(3, s1.size());
-		assertEquals(13, s1.get(0));
-		assertEquals(27, s1.get(2));
-	};
-
-	function helperTestListSet(objType) {
-
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(13);
-		s.add(5);
-
-		s.set(2, 100);
-		assertEquals(100, s.get(2));
-
-		var failed = false;
-		try {
-			s.set(10, 11);
-		} catch (e) {
-			failed = true;
-		}
-		assertTrue(failed);
-
-		failed = false;
-		try {
-			s.set(-1, 11);
-		} catch (e) {
-			failed = true;
-		}
-		assertTrue(failed);
-
-	};
-
-	function helperTestListIterator(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(-13);
-		s.add(-5);
-
-		var i = s.listIterator();
-		assertTrue(i.hasNext());
-		assertEquals(12, i.next());
-
-		var i2 = s.listIterator(2);
-		assertTrue(i2.hasNext());
-		assertEquals(-13, i2.next());
-	};
-
-	function helperTestListIteratorNext(objType) {
-
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-
-		var i = s.listIterator();
-
-		assertEquals(12, i.next());
-		assertEquals(5, i.next());
-
-		var failed = false;
-		try {
-			i.next();
-		} catch(e) {
-			failed = true;
-		}
-
-		assertTrue(failed);
-
-		s.add(-13);
-		s.add(-5);
-
-		var i2 = s.listIterator(2);
-
-		assertEquals(-13, i2.next());
-		assertEquals(-5, i2.next());
-
-		failed = false;
-		try {
-			i.next();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue(failed);
-
-	};
-
-	function helperTestListIteratorNextIndex(objType) {
-
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(-13);
-		s.add(-5);
-
-		var i = s.listIterator();
-		assertEquals(0, i.nextIndex());
-		i.next();
-		i.next();
-		assertEquals(2, i.nextIndex());
-
-		while(i.hasNext()) i.next();
-		assertEquals(4, i.nextIndex());
-
-	};
-
-	function helperTestListIteratorPrevious(objType) {
-
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(-13);
-		s.add(-5);
-
-		var i = s.listIterator();
-
-		var failed = false;
-		try {
-			i.previous();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue(failed);
-
-		i.next();
-		i.next();
-		assertEquals(5, i.previous());
-
-		while(i.hasNext()) i.next();
-		assertEquals(-5, i.previous());
-
-	};
-
-	function helperTestListIteratorPreviousIndex(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(-13);
-		s.add(-5);
-
-		var i = s.listIterator();
-
-		assertEquals(-1, i.previousIndex());
-
-		i.next();
-		i.next();
-		assertEquals(1, i.previousIndex());
-		i.next();
-		i.next();
-		i.previous();
-		assertEquals(2, i.previousIndex());
-
-	};
-
-	function helperTestListIteratorRemove(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(-13);
-		s.add(-5);
-		s.add(-11);
-		s.add(35);
-
-		var i = s.listIterator();
-
-		i.next();
-		i.next();
-		i.remove();
-
-		assertEquals(5, s.size());
-		assertEquals(-1, s.indexOf(5));
-
-		i.next();
-		i.next();
-		i.previous();
-		i.remove();
-
-		assertEquals(4, s.size());
-		assertEquals(-1, s.indexOf(-5));
-
-		var failed = false;
-		try {
-			i.remove();
-		} catch(e) {
-			failed = true;
-		}
-		assertTrue(failed);
-
-	};
-
-	function helperTestListIteratorAdd(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(-13);
-		s.add(-5);
-		s.add(-11);
-		s.add(35);
-
-		var i = s.listIterator();
-
-		i.next();
-		i.next();
-
-		i.add(33);
-
-		assertEquals(-13, i.next());
-		i.previous();
-		assertEquals(33, i.previous());
-
-		assertEquals(33, s.get(2));
-
-	};
-
-	function helperTestListIteratorSet(objType) {
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-		s.add(-5);
-		s.add(-11);
-		s.add(35);
-
-		var i = s.listIterator();
-
-		i.next();
-		i.set(22);
-
-		assertEquals(22, i.previous());
-		assertEquals(22, s.get(0));
-
-		i.next();
-		i.next();
-		i.next();
-		i.previous();
-		i.set(99);
-
-		assertEquals(99, i.next());
-		assertEquals(99, s.get(2));
-
-	};
-
-	function helperTestListIteratorHasNext(objType) {
-
-		var s = instantiate(objType);
-		s.add(12);
-		s.add(5);
-
-		var i = s.listIterator();
-
-		assertTrue(i.hasNext());
-		i.next();
-		assertTrue(i.hasNext());
-		i.next()
-		assertFalse(i.hasNext());
-		i.previous();
-		assertTrue(i.hasNext());
-
-	};
-
-	function helperTestListIteratorHasPrevious(objType) {
-		var s = instantiate(objType);
-		var i = s.listIterator();
-
-		assertFalse(i.hasPrevious());
-
-		s.add(12);
-		s.add(5);
-		s.add(-13);
-		s.add(-5);
-		s.add(-11);
-		s.add(35);
-
-		i = s.listIterator();
-
-		assertFalse(i.hasPrevious());
-		i.next();
-		i.next();
-		assertTrue(i.hasPrevious());
-		i.previous();
-		i.previous();
-		assertFalse(i.hasPrevious());
-
-	};
-
-
-
-	function helperStressTestSortedSet (objType) {
-		var MAX_INSERT_TIME = 2500; // 2.5 sec max to add 10,000 elements
-		var MAX_DELETE_TIME = 2000;
-		var s = instantiate(objType);
-		var f = ct.framework;
-
-		var d1= new Date();
-		for(var i=0; i<100000; i++) {
-			s.add(i & 0x2710); // limit to 10,000
-		}
-		var d2 = new Date();
-		var timeTaken =  Number(d2.getTime() - d1.getTime());
-		alert("Add time: " + timeTaken);
-		debug("Add time: timeTaken", timeTaken);
-		assertTrue("Executing add took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
-		s = null;
-		delete s;
-
-		var c = instantiate(objType);
-		var s = instantiate(objType);
-
-		for(var i=0; i<10000; i++) {
-			c.add(i);
-		}
-		d1 = new Date();
-		s.addAll(c);
-		d2= new Date();
-		timeTaken =  Number(d2.getTime() - d1.getTime());
-		alert("AddAll time: " + timeTaken);
-		debug("AddAll time: timeTaken", timeTaken);
-		assertTrue("Executing addAll took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
-
-		var i=c.iterator();
-
-		d1=new Date();
-		s.retainAll(c);
-		d2=new Date();
-		timeTaken =  Number(d2.getTime() - d1.getTime());
-		alert("RetainAll time: " + timeTaken);
-		debug("RetainAll time: timeTaken", timeTaken);
-		if (!f.isIE) assertTrue("Executing retainAll took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
-
-		d1=new Date();
-		var cb=function() {
-			d2=new Date();
-			timeTaken =  Number(d2.getTime() - d1.getTime());
-			alert("RemoveAll time: " + timeTaken);
-			debug("RemoveAll time: timeTaken", timeTaken);
-			if (!f.isIE) assertTrue("Executing remove took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
-		};
-
-		s.removeAll(c, f.isIE? cb : undefined);
-		if(!f.isIE) cb();
-
-		s = null;
-		delete s;
-		delete c;
-
-	}
-
-
-	function helperStressTestList (objType) {
-		var MAX_INSERT_TIME = 2500; // 2.5 sec max to add 10,000 elements
-		var MAX_DELETE_TIME = 3500;
-		var s = instantiate(objType);
-		var f = ct.framework;
-
-		var d1= new Date();
-		for(var i=0; i<10000; i++) {
-			s.add(i);
-		}
-		var d2 = new Date();
-		var timeTaken =  Number(d2.getTime() - d1.getTime());
-		alert("Add time: " + timeTaken);
-		debug("Add time: timeTaken", timeTaken);
-		assertTrue("Executing add took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
-		s = null;
-		delete s;
-
-		var c = instantiate(objType);
-		var s = instantiate(objType);
-
-		for(var i=0; i<10000; i++) {
-			c.add(i);
-		}
-		d1 = new Date();
-		s.addAll(c);
-		d2= new Date();
-		timeTaken =  Number(d2.getTime() - d1.getTime());
-		alert("AddAll time: " + timeTaken);
-		debug("AddAll time: timeTaken", timeTaken);
-		assertTrue("Executing addAll took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
-
-		var i=c.iterator();
-
-		var cb = function() {
-			d2=new Date();
-			timeTaken =  Number(d2.getTime() - d1.getTime());
-			alert("RetainAll time: " + timeTaken);
-			debug("RetainAll time: timeTaken", timeTaken);
-			if (!f.isIE) assertTrue("Executing retainAll took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
-			cb3();
-		};
-
-		var cb2 = function() {
-			d2=new Date();
-			timeTaken =  Number(d2.getTime() - d1.getTime());
-			alert("RemoveAll time: " + timeTaken);
-			debug("RemoveAll time: timeTaken", timeTaken);
-			if (!f.isIE) assertTrue("Executing remove took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
-
-			s = null;
-			delete s;
-			delete c;
-		};
-
-		var cb3=function() {
-			d1=new Date();
-			s.removeAll(c, cb2);
-			if(!f.isIE) cb2();
-		};
-
-		d1=new Date();
-		s.retainAll(c, f.isIE? cb : undefined);
-		if(!f.isIE) cb();
-
-	}
-
-
-
-	function helperTestOrderOfGrowth (objType) {
-
-		var s = instantiate(objType);
-		var f = ct.framework;
-
-		// scalar operations - add, remove
-		var f1 = function(func, limit) {
-			s.clear();
-			var d1=new Date();
-			for (var i=0; i<limit; i++) func(i);
-			var d2=new Date();
-			var timeTaken =  Number(d2.getTime() - d1.getTime());
-			return timeTaken;
-		};
-
-		// batch operations - removeAll, addAll
-		var f2 = function(func, limit) {
-			s.clear();
-			for (var i=0; i<1000; i++) s.add(i);
-
-			var c = instantiate(objType);
-			for (var i=0; i<limit; i++) c.add(i);
-
-			var d1=new Date();
-			func.call(s, c);
-			var d2=new Date();
-			var timeTaken =  Number(d2.getTime() - d1.getTime());
-
-			return timeTaken;
-		}
-
-		var base = 3;
-		var power = 3;
-		// stats for "add"
-		var dataPoints = [
-			{
-				x: Math.pow(base,power),
-				y: f1(s.add, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base,power),
-				y: f1(s.add, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base,power),
-				y: f1(s.add, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base,power),
-				y: f1(s.add, Math.pow(base,power++))
-			}
-		];
-
-
-		assertTrue(f.assertBigOQuadratic(dataPoints));
-		assertTrue(f.assertBigONLogN(dataPoints));
-		assertTrue(f.assertBigOLinear(dataPoints));
-
-
-		dataPoints = null;
-		power = 3;
-		dataPoints = [
-			{
-				x: Math.pow(base, power),
-				y: f2(s.addAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.addAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.addAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.addAll, Math.pow(base,power++))
-			}
-		];
-
-		assertTrue(f.assertBigOQuadratic(dataPoints));
-		assertTrue(f.assertBigONLogN(dataPoints));
-		assertTrue(f.assertBigOLinear(dataPoints));
-
-		dataPoints = null;
-		power = 3;
-		dataPoints = [
-			{
-				x: Math.pow(base, power),
-				y: f2(s.retainAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.retainAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.retainAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.retainAll, Math.pow(base,power++))
-			}
-		];
-
-		assertTrue(f.assertBigOQuadratic(dataPoints));
-		assertTrue(f.assertBigONLogN(dataPoints));
-		assertTrue(f.assertBigOLinear(dataPoints));
-
-		dataPoints = null;
-		power = 3;
-		dataPoints = [
-			{
-				x: Math.pow(base, power),
-				y: f2(s.removeAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.removeAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.removeAll, Math.pow(base,power++))
-			},
-			{
-				x: Math.pow(base, power),
-				y: f2(s.removeAll, Math.pow(base,power++))
-			}
-		];
-		assertTrue(f.assertBigOQuadratic(dataPoints));
-		assertTrue(f.assertBigONLogN(dataPoints));
-		assertTrue(f.assertBigOLinear(dataPoints));
-
-	}
-
-
-	function helperTestSortAndMerge() {
-		var arr = [7, 10, 13, 20, 22, 31, 45, 47, 49, 21, 39, 44, 46, 60];
-		var lastIndex = 8;
-		var hashMap =[];
-		for(var i=0;i<arr.length; i++) hashMap[ct.framework['defaultHashCode'](arr[i])] = i;
-		var scopeObj={f:ct.framework};
-		arr = ct.framework['sortAndMerge'].call(scopeObj, arr, lastIndex, false, hashMap);
-
-		for(var i=0; i< arr.length-1; i++) assertTrue("Array not sorted properly", arr[i] < arr[i+1]);
-	}
-
-
-	function helperTestBinarySearchNearestNeighbor() {
-		var arr = [7, 10, 13, 20, 22, 31, 45, 47, 49, 55, 100];
-
-		//find exact match
-		var scopeObj={f:ct.framework};
-		var resultObj = ct.framework.binarySearchNearestNeighbor.call(scopeObj, arr, 31, null);
-		assertEquals(31,resultObj.exactMatch);
-
-		// find greater
-		resultObj = ct.framework.binarySearchNearestNeighbor.call(scopeObj, arr, 11, null, true);
-		assertEquals(13,resultObj.neighbor);
-
-		// find lesser or equals
-		resultObj = ct.framework.binarySearchNearestNeighbor.call(scopeObj, arr, 21, null);
-		assertEquals(20,resultObj.neighbor);
-	}
-
-
-	function helperTestBinarySearch() {
-		var arr = [7, 10, 13, 20, 22, 31, 45, 47, 49, 55, 100, 123, 133, 131, 145, 190];
-		var scopeObj={f:ct.framework};
-
-		var result1 = ct.framework.binarySearch.call(scopeObj, arr, 47);
-
-		var result2 = ct.framework.binarySearch.call(scopeObj, arr, 48);
-
-		assertTrue(result1);
-		assertFalse(result2);
-
-	}
+  }
+
+  function helperTestListAdd(objType) {
+    // simple add
+    var s = instantiate(objType);
+
+    s.add(2);
+    s.add(4);
+    s.add(2);
+    s.add(-10);
+
+    assertEquals(4, s.size());
+    assertEquals(2, s.get(0));
+    assertEquals(-10, s.get(3));
+
+    // add at specified index
+    var failed = false;
+    try {
+      s.add(4, 100);
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue("Should have failed", failed);
+
+    s.add(2, 17);
+    assertEquals(17, s.get(2));
+    assertEquals(2, s.get(3));
+
+  };
+
+  function helperTestListAddAll(objType) {
+
+    var s = instantiate(objType);
+
+    s.add(2);
+    s.add(4);
+    s.add(2);
+    s.add(-10);
+
+    var j = instantiate(objType);
+    j.add(100);
+    j.add(10);
+    j.addAll(s);
+
+    assertEquals(6, j.size());
+    assertEquals(100, j.get(0));
+    assertEquals(2, j.get(2));
+
+    j.addAll(1, s);
+    assertEquals(2, j.get(1));
+    assertEquals(10, j.get(5));
+
+  };
+
+  function helperTestListGet(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(1);
+    assertEquals(12, s.get(0));
+
+    var failed = false;
+    try {
+      s.get(2);
+    } catch (e) {
+      failed = true;
+    }
+    assertTrue(failed);
+
+    failed = false;
+    try {
+      s.get(-1);
+    } catch (e) {
+      failed = true;
+    }
+    assertTrue(failed);
+  };
+
+  function helperTestListIndexOf(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(13);
+    s.add(5);
+    assertEquals(1, s.indexOf(5));
+    assertEquals(-1, s.indexOf(11));
+  };
+
+  function helperTestListLastIndexOf(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(13);
+    s.add(5);
+    assertEquals(3, s.lastIndexOf(5));
+    assertEquals(-1, s.lastIndexOf(11));
+  };
+
+  function helperTestListRemoveRange(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(13);
+    s.add(5);
+    s.add(27);
+    s.add(-12);
+    s.add(22);
+
+    s.removeRange(2,5);
+    assertEquals(4, s.size());
+    assertEquals(12, s.get(0));
+    assertEquals(5, s.get(1));
+    assertEquals(-12, s.get(2));
+    assertEquals(22,s.get(3));
+  };
+
+  function helperTestListSubList(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(13);
+    s.add(5);
+    s.add(27);
+    s.add(-12);
+    s.add(22);
+
+    var s1 = s.subList(2,5);
+    assertEquals(3, s1.size());
+    assertEquals(13, s1.get(0));
+    assertEquals(27, s1.get(2));
+  };
+
+  function helperTestListSet(objType) {
+
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(13);
+    s.add(5);
+
+    s.set(2, 100);
+    assertEquals(100, s.get(2));
+
+    var failed = false;
+    try {
+      s.set(10, 11);
+    } catch (e) {
+      failed = true;
+    }
+    assertTrue(failed);
+
+    failed = false;
+    try {
+      s.set(-1, 11);
+    } catch (e) {
+      failed = true;
+    }
+    assertTrue(failed);
+
+  };
+
+  function helperTestListIterator(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(-13);
+    s.add(-5);
+
+    var i = s.listIterator();
+    assertTrue(i.hasNext());
+    assertEquals(12, i.next());
+
+    var i2 = s.listIterator(2);
+    assertTrue(i2.hasNext());
+    assertEquals(-13, i2.next());
+  };
+
+  function helperTestListIteratorNext(objType) {
+
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+
+    var i = s.listIterator();
+
+    assertEquals(12, i.next());
+    assertEquals(5, i.next());
+
+    var failed = false;
+    try {
+      i.next();
+    } catch(e) {
+      failed = true;
+    }
+
+    assertTrue(failed);
+
+    s.add(-13);
+    s.add(-5);
+
+    var i2 = s.listIterator(2);
+
+    assertEquals(-13, i2.next());
+    assertEquals(-5, i2.next());
+
+    failed = false;
+    try {
+      i.next();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue(failed);
+
+  };
+
+  function helperTestListIteratorNextIndex(objType) {
+
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(-13);
+    s.add(-5);
+
+    var i = s.listIterator();
+    assertEquals(0, i.nextIndex());
+    i.next();
+    i.next();
+    assertEquals(2, i.nextIndex());
+
+    while(i.hasNext()) i.next();
+    assertEquals(4, i.nextIndex());
+
+  };
+
+  function helperTestListIteratorPrevious(objType) {
+
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(-13);
+    s.add(-5);
+
+    var i = s.listIterator();
+
+    var failed = false;
+    try {
+      i.previous();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue(failed);
+
+    i.next();
+    i.next();
+    assertEquals(5, i.previous());
+
+    while(i.hasNext()) i.next();
+    assertEquals(-5, i.previous());
+
+  };
+
+  function helperTestListIteratorPreviousIndex(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(-13);
+    s.add(-5);
+
+    var i = s.listIterator();
+
+    assertEquals(-1, i.previousIndex());
+
+    i.next();
+    i.next();
+    assertEquals(1, i.previousIndex());
+    i.next();
+    i.next();
+    i.previous();
+    assertEquals(2, i.previousIndex());
+
+  };
+
+  function helperTestListIteratorRemove(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(-13);
+    s.add(-5);
+    s.add(-11);
+    s.add(35);
+
+    var i = s.listIterator();
+
+    i.next();
+    i.next();
+    i.remove();
+
+    assertEquals(5, s.size());
+    assertEquals(-1, s.indexOf(5));
+
+    i.next();
+    i.next();
+    i.previous();
+    i.remove();
+
+    assertEquals(4, s.size());
+    assertEquals(-1, s.indexOf(-5));
+
+    var failed = false;
+    try {
+      i.remove();
+    } catch(e) {
+      failed = true;
+    }
+    assertTrue(failed);
+
+  };
+
+  function helperTestListIteratorAdd(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(-13);
+    s.add(-5);
+    s.add(-11);
+    s.add(35);
+
+    var i = s.listIterator();
+
+    i.next();
+    i.next();
+
+    i.add(33);
+
+    assertEquals(-13, i.next());
+    i.previous();
+    assertEquals(33, i.previous());
+
+    assertEquals(33, s.get(2));
+
+  };
+
+  function helperTestListIteratorSet(objType) {
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+    s.add(-5);
+    s.add(-11);
+    s.add(35);
+
+    var i = s.listIterator();
+
+    i.next();
+    i.set(22);
+
+    assertEquals(22, i.previous());
+    assertEquals(22, s.get(0));
+
+    i.next();
+    i.next();
+    i.next();
+    i.previous();
+    i.set(99);
+
+    assertEquals(99, i.next());
+    assertEquals(99, s.get(2));
+
+  };
+
+  function helperTestListIteratorHasNext(objType) {
+
+    var s = instantiate(objType);
+    s.add(12);
+    s.add(5);
+
+    var i = s.listIterator();
+
+    assertTrue(i.hasNext());
+    i.next();
+    assertTrue(i.hasNext());
+    i.next()
+    assertFalse(i.hasNext());
+    i.previous();
+    assertTrue(i.hasNext());
+
+  };
+
+  function helperTestListIteratorHasPrevious(objType) {
+    var s = instantiate(objType);
+    var i = s.listIterator();
+
+    assertFalse(i.hasPrevious());
+
+    s.add(12);
+    s.add(5);
+    s.add(-13);
+    s.add(-5);
+    s.add(-11);
+    s.add(35);
+
+    i = s.listIterator();
+
+    assertFalse(i.hasPrevious());
+    i.next();
+    i.next();
+    assertTrue(i.hasPrevious());
+    i.previous();
+    i.previous();
+    assertFalse(i.hasPrevious());
+
+  };
+
+
+
+  function helperStressTestSortedSet (objType) {
+    var MAX_INSERT_TIME = 2500; // 2.5 sec max to add 10,000 elements
+    var MAX_DELETE_TIME = 2000;
+    var s = instantiate(objType);
+    var f = ct.framework;
+
+    var d1= new Date();
+    for(var i=0; i<100000; i++) {
+      s.add(i & 0x2710); // limit to 10,000
+    }
+    var d2 = new Date();
+    var timeTaken =  Number(d2.getTime() - d1.getTime());
+    alert("Add time: " + timeTaken);
+    debug("Add time: timeTaken", timeTaken);
+    assertTrue("Executing add took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
+    s = null;
+    delete s;
+
+    var c = instantiate(objType);
+    var s = instantiate(objType);
+
+    for(var i=0; i<10000; i++) {
+      c.add(i);
+    }
+    d1 = new Date();
+    s.addAll(c);
+    d2= new Date();
+    timeTaken =  Number(d2.getTime() - d1.getTime());
+    alert("AddAll time: " + timeTaken);
+    debug("AddAll time: timeTaken", timeTaken);
+    assertTrue("Executing addAll took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
+
+    var i=c.iterator();
+
+    d1=new Date();
+    s.retainAll(c);
+    d2=new Date();
+    timeTaken =  Number(d2.getTime() - d1.getTime());
+    alert("RetainAll time: " + timeTaken);
+    debug("RetainAll time: timeTaken", timeTaken);
+    if (!f.isIE) assertTrue("Executing retainAll took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
+
+    d1=new Date();
+    var cb=function() {
+      d2=new Date();
+      timeTaken =  Number(d2.getTime() - d1.getTime());
+      alert("RemoveAll time: " + timeTaken);
+      debug("RemoveAll time: timeTaken", timeTaken);
+      if (!f.isIE) assertTrue("Executing remove took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
+    };
+
+    s.removeAll(c, f.isIE ? cb : undefined);
+    if(!f.isIE) cb();
+
+    s = null;
+    delete s;
+    delete c;
+
+  }
+
+
+  function helperStressTestList (objType) {
+    var MAX_INSERT_TIME = 2500; // 2.5 sec max to add 10,000 elements
+    var MAX_DELETE_TIME = 3500;
+    var s = instantiate(objType);
+    var f = ct.framework;
+
+    var d1= new Date();
+    for(var i=0; i<10000; i++) {
+      s.add(i);
+    }
+    var d2 = new Date();
+    var timeTaken =  Number(d2.getTime() - d1.getTime());
+    alert("Add time: " + timeTaken);
+    debug("Add time: timeTaken", timeTaken);
+    assertTrue("Executing add took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
+    s = null;
+    delete s;
+
+    var c = instantiate(objType);
+    var s = instantiate(objType);
+
+    for(var i=0; i<10000; i++) {
+      c.add(i);
+    }
+    d1 = new Date();
+    s.addAll(c);
+    d2= new Date();
+    timeTaken =  Number(d2.getTime() - d1.getTime());
+    alert("AddAll time: " + timeTaken);
+    debug("AddAll time: timeTaken", timeTaken);
+    assertTrue("Executing addAll took too long: "+ timeTaken + " ms", timeTaken < MAX_INSERT_TIME);
+
+    var i=c.iterator();
+
+    var cb = function() {
+      d2=new Date();
+      timeTaken =  Number(d2.getTime() - d1.getTime());
+      alert("RetainAll time: " + timeTaken);
+      debug("RetainAll time: timeTaken", timeTaken);
+      if (!f.isIE) assertTrue("Executing retainAll took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
+      cb3();
+    };
+
+    var cb2 = function() {
+      d2=new Date();
+      timeTaken =  Number(d2.getTime() - d1.getTime());
+      alert("RemoveAll time: " + timeTaken);
+      debug("RemoveAll time: timeTaken", timeTaken);
+      if (!f.isIE) assertTrue("Executing remove took too long: "+ timeTaken + " ms", timeTaken < MAX_DELETE_TIME); // this will fail on IE6, so just show the time
+
+      s = null;
+      delete s;
+      delete c;
+    };
+
+    var cb3=function() {
+      d1=new Date();
+      s.removeAll(c, cb2);
+      if(!f.isIE) cb2();
+    };
+
+    d1=new Date();
+    s.retainAll(c, f.isIE? cb : undefined);
+    if(!f.isIE) cb();
+
+  }
+
+
+
+  function helperTestOrderOfGrowth (objType) {
+
+    var s = instantiate(objType);
+    var f = ct.framework;
+
+    // scalar operations - add, remove
+    var f1 = function(func, limit) {
+      s.clear();
+      var d1=new Date();
+      for (var i=0; i<limit; i++) func(i);
+      var d2=new Date();
+      var timeTaken =  Number(d2.getTime() - d1.getTime());
+      return timeTaken;
+    };
+
+    // batch operations - removeAll, addAll
+    var f2 = function(func, limit) {
+      s.clear();
+      for (var i=0; i<1000; i++) s.add(i);
+
+      var c = instantiate(objType);
+      for (var i=0; i<limit; i++) c.add(i);
+
+      var d1=new Date();
+      func.call(s, c);
+      var d2=new Date();
+      var timeTaken =  Number(d2.getTime() - d1.getTime());
+
+      return timeTaken;
+    }
+
+    var base = 3;
+    var power = 3;
+    // stats for "add"
+    var dataPoints = [
+      {
+        x: Math.pow(base,power),
+        y: f1(s.add, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base,power),
+        y: f1(s.add, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base,power),
+        y: f1(s.add, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base,power),
+        y: f1(s.add, Math.pow(base,power++))
+      }
+    ];
+
+
+    assertTrue(f.assertBigOQuadratic(dataPoints));
+    assertTrue(f.assertBigONLogN(dataPoints));
+    assertTrue(f.assertBigOLinear(dataPoints));
+
+
+    dataPoints = null;
+    power = 3;
+    dataPoints = [
+      {
+        x: Math.pow(base, power),
+        y: f2(s.addAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.addAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.addAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.addAll, Math.pow(base,power++))
+      }
+    ];
+
+    assertTrue(f.assertBigOQuadratic(dataPoints));
+    assertTrue(f.assertBigONLogN(dataPoints));
+    assertTrue(f.assertBigOLinear(dataPoints));
+
+    dataPoints = null;
+    power = 3;
+    dataPoints = [
+      {
+        x: Math.pow(base, power),
+        y: f2(s.retainAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.retainAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.retainAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.retainAll, Math.pow(base,power++))
+      }
+    ];
+
+    assertTrue(f.assertBigOQuadratic(dataPoints));
+    assertTrue(f.assertBigONLogN(dataPoints));
+    assertTrue(f.assertBigOLinear(dataPoints));
+
+    dataPoints = null;
+    power = 3;
+    dataPoints = [
+      {
+        x: Math.pow(base, power),
+        y: f2(s.removeAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.removeAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.removeAll, Math.pow(base,power++))
+      },
+      {
+        x: Math.pow(base, power),
+        y: f2(s.removeAll, Math.pow(base,power++))
+      }
+    ];
+    assertTrue(f.assertBigOQuadratic(dataPoints));
+    assertTrue(f.assertBigONLogN(dataPoints));
+    assertTrue(f.assertBigOLinear(dataPoints));
+
+  }
+
+
+  function helperTestSortAndMerge() {
+    var arr = [7, 10, 13, 20, 22, 31, 45, 47, 49, 21, 39, 44, 46, 60];
+    var lastIndex = 8;
+    var hashMap =[];
+    for(var i=0;i<arr.length; i++) hashMap[ct.framework['defaultHashCode'](arr[i])] = i;
+    var scopeObj={f:ct.framework};
+    arr = ct.framework['sortAndMerge'].call(scopeObj, arr, lastIndex, false, hashMap);
+
+    for(var i=0; i< arr.length-1; i++) assertTrue("Array not sorted properly", arr[i] < arr[i+1]);
+  }
+
+
+  function helperTestBinarySearchNearestNeighbor() {
+    var arr = [7, 10, 13, 20, 22, 31, 45, 47, 49, 55, 100];
+
+    //find exact match
+    var scopeObj={f:ct.framework};
+    var resultObj = ct.framework.binarySearchNearestNeighbor.call(scopeObj, arr, 31, null);
+    assertEquals(31,resultObj.exactMatch);
+
+    // find greater
+    resultObj = ct.framework.binarySearchNearestNeighbor.call(scopeObj, arr, 11, null, true);
+    assertEquals(13,resultObj.neighbor);
+
+    // find lesser or equals
+    resultObj = ct.framework.binarySearchNearestNeighbor.call(scopeObj, arr, 21, null);
+    assertEquals(20,resultObj.neighbor);
+  }
+
+
+  function helperTestBinarySearch() {
+    var arr = [7, 10, 13, 20, 22, 31, 45, 47, 49, 55, 100, 123, 133, 131, 145, 190];
+    var scopeObj={f:ct.framework};
+
+    var result1 = ct.framework.binarySearch.call(scopeObj, arr, 47);
+
+    var result2 = ct.framework.binarySearch.call(scopeObj, arr, 48);
+
+    assertTrue(result1);
+    assertFalse(result2);
+
+  }
 
 
 </script>
